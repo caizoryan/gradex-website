@@ -1,25 +1,11 @@
 import { render, mut, html, sig, mem, eff_on } from "./solid/monke.js"
-import { Arena } from "./arena.js"
-import { auth } from "./auth.js"
 import * as Types from "./arena.js"
 
-let api = Arena({ auth })
 
 /**@type {Array<Types.Channel>}*/
 let data = mut([])
 
-api.channel("templist")
-	.get()
-	.then((channel) => {
-		channel.contents.forEach((block) => {
-			console.log(block.slug)
-			if (block.class == "Channel") {
-				console.log("getting", block.slug)
-				api.channel(block.slug).get().then((res) => data.push(res))
-			}
-		})
-	})
-
+fetch("./data.json").then((res) => res.json()).then(res => res.forEach((r) => data.push(r)))
 
 eff_on(() => data, () => console.log(data))
 
