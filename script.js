@@ -1,11 +1,12 @@
 import { render, mut, html, sig, mem, eff_on } from "./solid/monke.js"
 import * as Types from "./arena.js"
 
-
 /**@type {Array<Types.Channel>}*/
 let data = mut([])
 
-fetch("./data.json").then((res) => res.json()).then(res => res.forEach((r) => data.push(r)))
+fetch("./data.json")
+	.then((res) => res.json())
+	.then(res => res.forEach((r) => data.push(r)))
 
 eff_on(() => data, () => console.log(data))
 
@@ -26,16 +27,59 @@ let selected = sig(null)
 
 let tool = sig("")
 let toggle_tool = (t) => {
-	if (tool() == t) {
-		tool.set("")
-	} else { tool.set(t) }
+	if (tool() == t) { tool.set("") }
+	else { tool.set(t) }
 }
 
+
 let App = () => {
+	const box_state = mut([]);
+
+	for (let i = 0; i < 6; i++) {
+		box_state.push(
+			{ x: Math.random() * 25, y: Math.random() * 20 + i * 20, w: Math.random() * 20 + 30, h: 20, o: 0.2, c: "" },
+		)
+
+		setInterval(() => {
+			box_state[i].x = Math.random() * 35
+			box_state[i].y = Math.random() * i * 20
+			box_state[i].w = Math.random() * 60 + 10
+			box_state[i].h = Math.random() * 30 + 10
+		}, (i + 1) * 400)
+
+	}
+
+	// setInterval(() => {
+	// 	for (let i = 0; i < 4; i++) {
+	// 		box_state[i].x = Math.random() * 25
+	// 		box_state[i].y = Math.random() * 20 + i * 20
+	// 		box_state[i].w = Math.random() * 20 + 30
+	// 		box_state[i].h = Math.random() * 30 + 10
+	// 	}
+	// }, 1500)
+
 	let name = mem(() => selected() ? selected().parent.title : "")
 	let updated = mem(() => selected() ? selected().updated_at : "")
 	let created = mem(() => selected() ? selected().created_at : "")
 	let content_type = mem(() => selected() ? selected().image?.content_type : "")
+
+	let random_rects = () => {
+		return html` 
+			.rects [style=position:fixed;top:0;left:0;z-index:100]
+
+				each of ${box_state} as ${(e) => html`
+					.box [
+						style=${() => `
+							position: absolute;
+							width: ${e.w}vw;
+							height:${e.h}vh;
+							top: ${e.y}vh;
+							left: ${e.x}vw;`}]
+				`}
+
+				h1 [style=position:fixed;top:25vh;left:25vw;] -- Work In Progress...
+			`
+	}
 
 	let ref = e => {
 		setInterval(() => e.scrollTop += 5, 100)
@@ -46,6 +90,7 @@ let App = () => {
 	}
 
 	return html`
+		.loader -- ${random_rects}
 		.main
 			.toolbar
 				button [onclick=${() => toggle_tool("select")}] -- x
@@ -57,8 +102,7 @@ let App = () => {
 				.metadata
 					p -- modified: ${updated}
 					p -- created: ${created}
-					p -- content type: ${content_type}
-	`
+					p -- content type: ${content_type}`
 }
 
 let scroll = sig(0)
@@ -87,12 +131,13 @@ function image(block, i) {
 	})
 
 	let translate = mem(() => {
-
 		let t = -scroll() + (i() * 2000)
 		let o = 1
+
 		if (t > -150) {
 			o = (t * -1) / 150
 		}
+
 		let x = ((mouse_x() / window.innerWidth) - .5) * (i() * 30)
 		let y = ((mouse_y() / window.innerHeight) - .5) * (i() * 30)
 
@@ -114,8 +159,8 @@ function image(block, i) {
 			perspective(1000px)
 			translate3d(${x}px, ${y}px, ${t}px);
 `
-	}
-	)
+	})
+
 
 	return html`
 		img [src=${block.image.display.url} 
@@ -123,7 +168,6 @@ function image(block, i) {
 		onmouseleave=${() => hover.set(false)}
 		style=${translate}]
 	`
-
 }
 
 render(App, document.body)

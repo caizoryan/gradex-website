@@ -9,6 +9,11 @@
 </head>
 
 <style>
+	:root {
+		--size: 30px;
+		--grid-color: blue;
+	}
+
 	body {
 		font-family: monospace;
 	}
@@ -36,6 +41,32 @@
 
 	.name {
 		padding: 1em;
+	}
+
+	.box {
+		background-image:
+			linear-gradient(45deg, var(--grid-color) 25%, transparent 25%),
+			linear-gradient(45deg, transparent 75%, var(--grid-color) 75%),
+			linear-gradient(45deg, transparent 75%, var(--grid-color) 75%),
+			linear-gradient(45deg, var(--grid-color) 25%, #fff 25%);
+
+		background-size: var(--size) var(--size);
+
+		mix-blend-mode: difference;
+
+		background-position: 0 0, 0 0, calc(var(--size) / -2) calc(var(--size) / -2), calc(var(--size) / 2) calc(var(--size) / 2);
+		transition: all 50ms ease-in-out;
+	}
+
+	.loader h1 {
+		font-weight: 100;
+		color: white;
+		font-size: 5em;
+		text-shadow:
+			-5px -5px 0 #000,
+			5px -5px 0 #000,
+			-5px 5px 0 #000,
+			5px 5px 0 #000;
 	}
 
 	.metadata {
