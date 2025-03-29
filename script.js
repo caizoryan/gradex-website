@@ -35,7 +35,7 @@ let toggle_tool = (t) => {
 let App = () => {
 	const box_state = mut([]);
 
-	for (let i = 0; i < 6; i++) {
+	for (let i = 0; i < 12; i++) {
 		box_state.push(
 			{ x: Math.random() * 25, y: Math.random() * 20 + i * 20, w: Math.random() * 20 + 30, h: 20, o: 0.2, c: "" },
 		)
@@ -46,17 +46,7 @@ let App = () => {
 			box_state[i].w = Math.random() * 60 + 10
 			box_state[i].h = Math.random() * 30 + 10
 		}, (i + 1) * 400)
-
 	}
-
-	// setInterval(() => {
-	// 	for (let i = 0; i < 4; i++) {
-	// 		box_state[i].x = Math.random() * 25
-	// 		box_state[i].y = Math.random() * 20 + i * 20
-	// 		box_state[i].w = Math.random() * 20 + 30
-	// 		box_state[i].h = Math.random() * 30 + 10
-	// 	}
-	// }, 1500)
 
 	let name = mem(() => selected() ? selected().parent.title : "")
 	let updated = mem(() => selected() ? selected().updated_at : "")
