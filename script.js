@@ -35,14 +35,14 @@ let toggle_tool = (t) => {
 let App = () => {
 	const box_state = mut([]);
 
-	for (let i = 0; i < 12; i++) {
+	for (let i = 0; i < 41; i++) {
 		box_state.push(
 			{ x: Math.random() * 25, y: Math.random() * 20 + i * 20, w: Math.random() * 20 + 30, h: 20, o: 0.2, c: "" },
 		)
 
 		setInterval(() => {
 			box_state[i].x = Math.random() * 35
-			box_state[i].y = Math.random() * i * 20
+			box_state[i].y = Math.random() * i * 10
 			box_state[i].w = Math.random() * 60 + 10
 			box_state[i].h = Math.random() * 30 + 10
 		}, (i + 1) * 400)
