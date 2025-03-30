@@ -25,7 +25,7 @@ const images = mem(() => {
 /**@type {() => (Types.Block | null)}*/
 let selected = sig(null)
 
-let tool = sig("")
+let tool = sig("select")
 let toggle_tool = (t) => {
 	if (tool() == t) { tool("") }
 	else { tool(t) }
@@ -46,7 +46,7 @@ document.body.onscroll = (event) => {
 	scroll(window.scrollY)
 };
 
-function random_rects() {
+function random_rects(box_state) {
 	return html` 
 			.rects [style=position:fixed;top:0;left:0;z-index:100]
 				each of ${box_state} as ${(e, i) => html`
@@ -105,8 +105,20 @@ let App = () => {
 		};
 	}
 
+	let blend_mode = sig("")
+	let blend_modes = ["normal", "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn", "hard-light", "soft-light", "difference", "exclusion", "luminosity", "plus-darker", "plus-lighter"]
+	let cur = 0
+	setInterval(() => {
+		cur++
+		if (cur >= blend_modes.length) {
+			cur = 0
+		}
+
+		blend_mode(blend_modes[cur])
+	}, 1500)
+
 	return html`
-		.loader -- ${random_rects}
+		.loader [style=${() => "mix-blend-mode:" + blend_mode() + ";"}] -- ${() => random_rects(box_state)}
 		.main
 			.toolbar
 				button [onclick=${() => toggle_tool("select")}] -- x
