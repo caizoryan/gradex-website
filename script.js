@@ -64,8 +64,8 @@ let App = () => {
 							height:${e.h}vh;
 							top: ${e.y}vh;
 							transform:
-								translate(${mouse_x() / window.innerWidth * (i() * 50)}px,
-									${mouse_y() / window.innerHeight * (i() * 50)}px);
+								translate(${mouse_x() / window.innerWidth * ((i() % 4) * 150)}px,
+									${mouse_y() / window.innerHeight * ((i() % 4) * 150)}px);
 							left: ${e.x}vw;
 					`)}]
 				`}
