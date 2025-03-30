@@ -56,15 +56,18 @@ let App = () => {
 	let random_rects = () => {
 		return html` 
 			.rects [style=position:fixed;top:0;left:0;z-index:100]
-
-				each of ${box_state} as ${(e) => html`
+				each of ${box_state} as ${(e, i) => html`
 					.box [
-						style=${() => `
+						style=${mem(() => `
 							position: absolute;
 							width: ${e.w}vw;
 							height:${e.h}vh;
 							top: ${e.y}vh;
-							left: ${e.x}vw;`}]
+							transform:
+								translate(${mouse_x() / window.innerWidth * (i() * 50)}px,
+									${mouse_y() / window.innerHeight * (i() * 50)}px);
+							left: ${e.x}vw;
+					`)}]
 				`}
 
 				h1 [style=position:fixed;top:25vh;left:25vw;] -- Work In Progress...
