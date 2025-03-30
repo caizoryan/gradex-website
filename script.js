@@ -47,7 +47,6 @@ document.body.onscroll = (event) => {
 };
 
 function random_rects() {
-	return
 	return html` 
 			.rects [style=position:fixed;top:0;left:0;z-index:100]
 				each of ${box_state} as ${(e, i) => html`
