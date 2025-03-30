@@ -61,7 +61,7 @@
 		/* mix-blend-mode: difference; */
 
 		background-position: 0 0, 0 0, calc(var(--size) / -2) calc(var(--size) / -2), calc(var(--size) / 2) calc(var(--size) / 2);
-		transition: all 50ms ease-in-out;
+		transition: all 200ms ease-in-out;
 	}
 
 	.loader h1 {
@@ -115,6 +115,12 @@
 		background-image:
 			linear-gradient(to right, #2222 1px, transparent 1px),
 			linear-gradient(to bottom, #2222 1px, transparent 1px);
+	}
+
+	.canvas img {
+		width: 600px;
+		position: fixed;
+		padding: 1em;
 	}
 
 	.scroll {

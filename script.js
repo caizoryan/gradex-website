@@ -10,7 +10,7 @@ fetch("./data.json")
 
 eff_on(() => data, () => console.log(data))
 
-let images = mem(() => {
+const images = mem(() => {
 	let imgs = []
 	data.forEach((channel) => {
 		channel.contents.forEach((block) => {
@@ -27,10 +27,53 @@ let selected = sig(null)
 
 let tool = sig("")
 let toggle_tool = (t) => {
-	if (tool() == t) { tool.set("") }
-	else { tool.set(t) }
+	if (tool() == t) { tool("") }
+	else { tool(t) }
 }
 
+
+let scroll = sig(0)
+let mouse_x = sig(0)
+let mouse_y = sig(0)
+
+document.onmousemove = (e => {
+	mouse_x(e.clientX)
+	mouse_y(e.clientY)
+})
+
+document.body.onscroll = (event) => {
+	console.log("SCROLLO")
+	scroll(window.scrollY)
+};
+
+function random_rects() {
+	return
+	return html` 
+			.rects [style=position:fixed;top:0;left:0;z-index:100]
+				each of ${box_state} as ${(e, i) => html`
+					.box [
+						style=${mem(() => `
+							position: absolute;
+							width: ${e.w}vw;
+							height:${e.h}vh;
+							top: ${e.y}vh;
+							transform:
+								translate(${mouse_x() / window.innerWidth * ((i() % 4) * 150)}px,
+									${mouse_y() / window.innerHeight * ((i() % 4) * 150)}px);
+							left: ${e.x}vw;
+					`)}]
+				`}
+
+				h1 [style=position:fixed;top:25vh;left:25vw;] -- Work In Progress...
+			`
+}
+
+let canvas_dom
+
+let scroll_canvas = (value) => {
+	console.log("called", value)
+	canvas_dom.scrollTop += value
+}
 
 let App = () => {
 	const box_state = mut([]);
@@ -53,32 +96,13 @@ let App = () => {
 	let created = mem(() => selected() ? selected().created_at : "")
 	let content_type = mem(() => selected() ? selected().image?.content_type : "")
 
-	let random_rects = () => {
-		return html` 
-			.rects [style=position:fixed;top:0;left:0;z-index:100]
-				each of ${box_state} as ${(e, i) => html`
-					.box [
-						style=${mem(() => `
-							position: absolute;
-							width: ${e.w}vw;
-							height:${e.h}vh;
-							top: ${e.y}vh;
-							transform:
-								translate(${mouse_x() / window.innerWidth * ((i() % 4) * 150)}px,
-									${mouse_y() / window.innerHeight * ((i() % 4) * 150)}px);
-							left: ${e.x}vw;
-					`)}]
-				`}
-
-				h1 [style=position:fixed;top:25vh;left:25vw;] -- Work In Progress...
-			`
-	}
 
 	let ref = e => {
+		canvas_dom = e
 		setInterval(() => e.scrollTop += 5, 100)
 
 		e.onscroll = (event) => {
-			scroll.set(e.scrollTop)
+			scroll(e.scrollTop)
 		};
 	}
 
@@ -98,20 +122,7 @@ let App = () => {
 					p -- content type: ${content_type}`
 }
 
-let scroll = sig(0)
-
-let mouse_x = sig(0)
-let mouse_y = sig(0)
-
-document.onmousemove = (e => {
-	mouse_x.set(e.clientX)
-	mouse_y.set(e.clientY)
-})
-
-document.body.onscroll = (event) => {
-	console.log("SCROLLO")
-	scroll.set(window.scrollY)
-};
+let timeout = undefined
 
 function image(block, i) {
 	let hover = sig(false)
@@ -119,12 +130,14 @@ function image(block, i) {
 	let left = Math.random() * window.innerWidth / 2 - window.innerWidth / 8
 
 	eff_on(hover, () => {
-		if (hover()) selected.set(block)
-		else selected.set(null)
+		if (hover()) selected(block)
+		else selected(null)
 	})
 
+	let z = mem(() => -scroll() + (i() * 2000))
+
 	let translate = mem(() => {
-		let t = -scroll() + (i() * 2000)
+		let t = z()
 		let o = 1
 
 		if (t > -150) {
@@ -135,30 +148,49 @@ function image(block, i) {
 		let y = ((mouse_y() / window.innerHeight) - .5) * (i() * 30)
 
 		if (t > -550 && t < -100) {
-			selected.set(block)
+			selected(block)
 		}
 
 		return ` 
-		position: fixed;
-		padding: 1em;
-		${`border: ${hover() ? "1px solid black;" : ";"}`}
+		${`border: ${hover() ? "5px dotted black;" : ";"}`}
 		left: ${left}px;
 		top: ${top}px;
 		${tool() == "select" ? "" : "pointer-events: none;"}
 		${(t > -150 ? "pointer-events: none;" : "")}
-		width: 600px;
 		opacity: ${o};
 		transform: 
 			perspective(1000px)
 			translate3d(${x}px, ${y}px, ${t}px);
-`
-	})
+` })
 
+	let seek = (value) => {
+		let _value = value()
+		if (timeout) clearTimeout(timeout)
+		// get value -500 < x < -150
+
+		timeout = setTimeout(() => {
+
+			if (_value > -500 && _value < -150) {
+				return
+			} else if (_value > -150) {
+				scroll_canvas(150)
+				seek(value)
+			} else {
+				scroll_canvas(-150)
+				seek(value)
+			}
+
+		}, 10)
+	}
+	let scroll_into_view = () => {
+		seek(z)
+	}
 
 	return html`
 		img [src=${block.image.display.url} 
-		onmouseover=${() => hover.set(true)}
-		onmouseleave=${() => hover.set(false)}
+		onmouseover=${() => hover(true)}
+		onmouseleave=${() => hover(false)}
+		onclick=${scroll_into_view}
 		style=${translate}]
 	`
 }
