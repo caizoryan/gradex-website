@@ -1,4 +1,7 @@
-import { render, mut, html, sig, mem, eff_on } from "./solid/monke.js"
+import { render, mut, html, sig, mem, eff_on, each } from "./solid/monke.js"
+import { hdom } from "./solid/hdom/index.js"
+
+
 import * as Types from "./arena.js"
 
 /**@type {Array<Types.Channel>}*/
@@ -47,36 +50,33 @@ document.body.onscroll = (event) => {
 };
 
 function random_rects(box_state) {
-	return html` 
-			.rects [style=position:fixed;top:0;left:0;z-index:100]
-				each of ${box_state} as ${(e, i) => html`
-					.box [
-						style=${mem(() => `
-							position: absolute;
-							width: ${e.w}vw;
-							height:${e.h}vh;
-							top: ${e.y}vh;
-							transform:
-								translate(${mouse_x() / window.innerWidth * ((i() % 4) * 150)}px,
-									${mouse_y() / window.innerHeight * ((i() % 4) * 150)}px);
-							left: ${e.x}vw;
-					`)}]
-				`}
+	let box = (e, i) => hdom([".box", {
+		style: mem(() => `
+			position: absolute;
+			width: ${e.w}vw;
+			height:${e.h}vh;
+			top: ${e.y}vh;
+			transform:
+				translate(${mouse_x() / window.innerWidth * ((i() % 4) * 150)}px,
+				${mouse_y() / window.innerHeight * ((i() % 4) * 150)}px);
+			left: ${e.x}vw; `
+		)
+	}])
 
-				h1 [style=position:fixed;top:25vh;left:25vw;] -- Work In Progress...
-			`
+	return hdom([
+		".rects",
+		{ style: "position:fixed;top:0;left:0;z-index:100" },
+		() => each(box_state, box),
+		["h1", { style: "position:fixed;top:25vh;left:25vw;" }, "Work In Progress..."]])
 }
 
 let canvas_dom
 
-let scroll_canvas = (value) => {
-	console.log("called", value)
-	canvas_dom.scrollTop += value
-}
+let scroll_canvas = (value) => canvas_dom.scrollTop += value
 
 let App = () => {
-	const box_state = mut([]);
 
+	const box_state = mut([]);
 	for (let i = 0; i < 41; i++) {
 		box_state.push(
 			{ x: Math.random() * 25, y: Math.random() * 20 + i * 20, w: Math.random() * 20 + 30, h: 20, o: 0.2, c: "" },
@@ -113,25 +113,68 @@ let App = () => {
 		if (cur >= blend_modes.length) {
 			cur = 0
 		}
-
 		blend_mode(blend_modes[cur])
 	}, 1500)
 
-	return html`
-		.loader [style=${() => "mix-blend-mode:" + blend_mode() + ";"}] -- ${() => random_rects(box_state)}
-		.main
-			.toolbar
-				button [onclick=${() => toggle_tool("select")}] -- x
-			.canvas [ref=${ref}]
-				.scroll
-					each of ${images} as ${image}  
-			.sidebar 
-				.name -- ${name}
-				.metadata
-					p -- modified: ${updated}
-					p -- created: ${created}
-					p -- content type: ${content_type}`
+	let btn = (click_fn, one, two) => {
+		let atts = {
+			onclick: click_fn
+		}
+		let text = two
+		if (typeof one == "object") {
+			Object.assign(atts, one)
+		}
+		else if (typeof one == "string") {
+			text = one
+		}
+
+		return ["button", atts, text]
+	}
+	let tool_btn = (name) =>
+		btn(
+			() => toggle_tool(name),
+			{ style: mem(() => `opacity: ${tool() == name ? 1 : .1}`) }
+			, name)
+
+	let loader = [
+		".loader",
+		{ style: () => "mix-blend-mode:" + blend_mode() + ";" },
+		() => random_rects(box_state)
+	]
+
+	let toolbar = [
+		".toolbar",
+		tool_btn("select"),
+		tool_btn("scroll")
+	]
+
+	let canvas = [
+		".canvas",
+		{ ref },
+		[".scroll", () => each(images, image)]
+	]
+
+	let sidebar =
+		[".sidebar",
+			[".name", name],
+			[".metadata",
+				["p", 'modified: ', updated],
+				["p", 'created: ', created],
+				["p", 'content type: ', content_type]]
+		]
+
+	return hdom([
+
+		loader,
+		[".main",
+			toolbar,
+			canvas,
+			sidebar
+		]
+
+	])
 }
+
 
 let timeout = undefined
 
@@ -177,10 +220,7 @@ function image(block, i) {
 	let seek = (value) => {
 		let _value = value()
 		if (timeout) clearTimeout(timeout)
-		// get value -500 < x < -150
-
 		timeout = setTimeout(() => {
-
 			if (_value > -500 && _value < -150) {
 				return
 			} else if (_value > -150) {
@@ -190,20 +230,44 @@ function image(block, i) {
 				scroll_canvas(-150)
 				seek(value)
 			}
-
 		}, 10)
 	}
-	let scroll_into_view = () => {
-		seek(z)
-	}
 
-	return html`
-		img [src=${block.image.display.url} 
-		onmouseover=${() => hover(true)}
-		onmouseleave=${() => hover(false)}
-		onclick=${scroll_into_view}
-		style=${translate}]
-	`
+	return hdom([
+		"img", {
+			src: block.image.display.url,
+			onmouseover: () => hover(true),
+			onmouseleave: () => hover(false),
+			onclick: () => seek(z),
+			style: translate
+		}])
 }
+
+/**
+ * @template A
+ * @typedef {[(arg1: A) => void, A]} Arg1
+ **/
+
+/**
+ * @template A, B
+ * @typedef {[(arg1: A, arg2: B) => void, A, B] } Arg2
+ * */
+
+/**
+ * @template A, B
+ * @param {(Arg1<A> | Arg2<A, B>)} arr */
+function mapper(arr) { }
+
+/**
+ * @param {() => void} a 
+ * */
+function gen(a) { }
+
+/**
+ * @param {() => void} a 
+ * @param {string} b 
+ * */
+function gen2(a, b) { }
+mapper([gen2, () => { }, "string"])
 
 render(App, document.body)

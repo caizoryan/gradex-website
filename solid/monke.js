@@ -42,12 +42,13 @@ import {
 import { h as html } from "./concise_html/index.js";
 
 // The core, the heart and the soul
+//
+//
 
 /** Creates a signal object with a getter and setter.
  *
- * @template {any} T
- * @typedef {Object} Signal<T>
- * @property {Function} Signal.set
+ * @template [T=any]
+ * @typedef {function(T=):T} Signal<T>
 */
 
 
