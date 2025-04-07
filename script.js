@@ -12,6 +12,11 @@ const lerp = (start, stop, amt) => amt * (stop - start) + start
 const invlerp = (x, y, a) => clamp((a - x) / (y - x));
 const clamp = (a, min = 0, max = 1) => Math.min(max, Math.max(min, a));
 const range = (x1, y1, x2, y2, a) => lerp(x2, y2, invlerp(x1, y1, a));
+const not = (value) => !value
+const calc_z = (index) => -scroll() + (index * 5000)
+
+/**@type {(val: number, min: number, max: number) => boolean}*/
+const between = (val, min, max) => (val > min && val < max)
 
 /**
  * @type Tapri.Signal<Student> 
@@ -23,16 +28,13 @@ const selected_student = sig(null)
  * @type Tapri.Signal<ToolName>
  * */
 const tool = sig("select")
-
 const scroll = sig(0)
-
+const autoscroll = sig(true)
 const mouse_x = sig(0)
 const mouse_y = sig(0)
-
 const rel_mouse_x = mem(() => mouse_x() / window.innerWidth)
 const rel_mouse_y = mem(() => mouse_y() / window.innerHeight)
 
-const autoscroll = sig(true)
 
 /**@param {ToolName} t*/
 const toggle_tool = (t) => {
@@ -68,6 +70,7 @@ const channels = mut([])
 fetch("./data.json")
 	.then((res) => res.json())
 	.then(res => res.forEach((r) => channels.push(r)))
+	.then(_ => init_students(channels))
 
 const images = mem(() => {
 	return channels.reduce((acc, channel) => {
@@ -107,45 +110,63 @@ const images = mem(() => {
 		transform: Transform,
 		rotation: Rotation
 
+		website: ArenaType.Block,
 		bio: string,
 		links: string,
 		images: ArenaType.Block[]
 		videos: ArenaType.Block[]
 	}} Student
- * @type {() => Student[]}*/
-const students = mem(() => channels.reduce(
-	/**@param {Student[]} students */
-	(students, channel) => {
-		// each channel is a student
-		const name = channel.title
-		const bio = channel.metadata.description
-		const slug = channel.slug
-		const website = channel.contents.find((block) => block.title == "Website" && block.class == "Link")
-		const links = channel.contents.find((block) => block.title == "Links" && block.class == "Text")
+ * @type {Student[]}*/
+const students = mut([])
 
-		/**@type Dimension*/
-		const dimension = { width: 800, height: 800 }
+/**@param {ArenaType.Channel[]} channels */
+function init_students(channels) {
+	channels.reduce(
+		/**@param {Student[]} students */
+		(students, channel) => {
+			// each channel is a student
+			const name = channel.title
+			const bio = channel.metadata.description
+			const slug = channel.slug
+			const website = channel.contents.find((block) => block.title == "Website" && block.class == "Link")
+			const links = channel.contents.find((block) => block.title == "Links" && block.class == "Text")
 
-		/**@type Transform*/
-		const transform = { x: 5, y: 5 }
+			/**@type Dimension*/
+			const dimension = { width: 800, height: 800 }
 
-		/**@type Rotation*/
-		const rotation = { x: 0, y: 0, z: 0 }
+			/**@type Transform*/
+			const transform = { x: 5, y: 5 }
 
-		const images = channel.contents.reduce((acc, block) => {
-			if (block.class == "Image") acc.push(block)
-			return acc
+			/**@type Rotation*/
+			const rotation = { x: 0, y: 0, z: 0 }
+
+			const images = channel.contents.reduce((acc, block) => {
+				if (block.class == "Image") acc.push(block)
+				return acc
+			}, [])
+
+			const videos = channel.contents.reduce((acc, block) => {
+				if (block.class == "Attachment" && block.attachment.extension == "mp4") acc.push(block)
+				return acc
+			}, [])
+
+			students.push({
+				name,
+				images,
+				bio,
+				website,
+				links,
+				videos,
+				slug,
+				dimension,
+				transform,
+				rotation
+			})
+
+			return students
 		}, [])
-
-		const videos = channel.contents.reduce((acc, block) => {
-			if (block.class == "Attachment" && block.attachment.extension == "mp4") acc.push(block)
-			return acc
-		}, [])
-
-		students.push({ name, images, bio, website, links, videos, slug, dimension, transform, rotation })
-		return students
-	}, []))
-
+		.forEach(s => students.push(s))
+}
 
 // -----------------------
 // Event Listeners
@@ -280,71 +301,47 @@ const Main = () => {
 		".canvas",
 		{ ref },
 		//[".scroll", each(images, image)]
-		[".scroll", each(students, student_page)]
+		[".scroll",
+			() => students.map((s, i) => student_page(s, () => i))
+		]
 	]
 
 	function label_number_input(label, getter, setter) {
 		return [
 			".label-input",
 			["span.label", label],
-			["input", {
+			() => hdom(["input", {
 				value: getter,
 				type: "number",
 				oninput: (e) => {
-					setter(parseInt(e.target.value))
+					let value = parseInt(e.target.value)
+					if (isNaN(value)) value = 0
+					setter(value)
 				}
-			}]
+			}])
 		]
 	}
 
 	/**@param {Student} student*/
 	let dimension_editor = (student) => [
 		".2d",
-		() => hdom(label_number_input("width: ", student.dimension.width, v => student.dimension.width = v)),
-		() => hdom(label_number_input("height: ", student.dimension.height, v => student.dimension.height = v)),
-	]
 
-	let mul_label_number = (label, getter, setter, mul) => {
-		let _value = sig(getter)
-		eff_on(_value, () => setter(_value() * mul()))
-		eff_on(mul, () => setter(_value() * mul()))
+		label_number_input("width: ",
+			() => student.dimension.width,
+			v => student.dimension.width = v),
 
-		return [
-			".2d",
-			() => hdom(label_number_input(label, _value, _value)),
-			() => _value() * mul()
-		]
-	}
-
-	/**@param {{name: string, choice: () => number}[]} mul_options*/
-	let choice_mul = (label, getter, setter, mul_options) => {
-		let index = sig(0)
-		let btns = mul_options.map((opt, i) => {
-			let eq = () => index() == i
-			return check_btn(
-				opt.name,
-				() => eq() ? index(0) : index(i),
-				eq)
-		})
-
-		return [
-			".choice",
-			() => hdom(mul_label_number(label, getter, setter, mul_options[index()].choice)),
-			[".btns", ...btns]
-		]
-	}
-
-	let mul_options = [
-		{ name: "mx", choice: rel_mouse_x }, { name: "my", choice: rel_mouse_y }
+		label_number_input("height: ",
+			() => student.dimension.height,
+			v => student.dimension.height = v),
 	]
 
 	/**@param {Student} student*/
 	let rotation_editor = (student) => [
 		".2d",
 		["h4", "rotation"],
-		...Object.entries(student.rotation).map(([key, value]) => () => hdom(
-			choice_mul(key + ": ", value, v => student.rotation[key] = v, mul_options)
-		)),
+		label_number_input("x: ", () => student.rotation.x, v => student.rotation.x = v),
+		label_number_input("y: ", () => student.rotation.y, v => student.rotation.y = v),
+		label_number_input("z: ", () => student.rotation.z, v => student.rotation.z = v),
 	]
 
 	/**@param {Student} student*/
@@ -359,7 +356,7 @@ const Main = () => {
 
 		return hdom(["p.layer", {
 			onclick: () => {
-				let index = students().findIndex((b) => b.slug == student.slug)
+				let index = students.findIndex((b) => b.slug == student.slug)
 				seek(() => calc_z(index))
 			},
 			style: () => CSS.css({ "background-color": selected() ? "yellow" : "none" })
@@ -379,13 +376,13 @@ const Main = () => {
 		[".scroll", each(students, layer)]
 	]
 
+	// figure out how to store these in local storage
 	let properties = () => [
 		".properties",
 		() => hdom(dimension_editor(selected_student())),
 		() => hdom(rotation_editor(selected_student()))
 	]
 
-	let not = (value) => !value
 
 	let sidebar =
 		[".sidebar",
@@ -408,19 +405,16 @@ const Main = () => {
 		]
 
 	return hdom([
-		//loader(),
+		loader(),
 		[".main",
 			toolbar,
-			canvas,
+			hdom(canvas),
 			sidebar
 		]
 	])
 }
 
 
-/**@type {(val: number, min: number, max: number) => boolean}*/
-let between = (val, min, max) => (val > min && val < max)
-let calc_z = (index) => -scroll() + (index * 5000)
 
 /**
  * @param {Student} student 
@@ -444,7 +438,6 @@ function student_page(student, i) {
 	let style = mem(() => {
 		let x = student.transform.x + ((mouse_x() / window.innerWidth) - .5) * (i() * 30)
 		let y = student.transform.x + ((mouse_y() / window.innerHeight) - .5) * (i() * 30)
-
 		if (between(root_z(), -550, -100)) selected_student(student)
 
 		let { css, px } = CSS
@@ -458,11 +451,11 @@ function student_page(student, i) {
 			border: hover() ? "5px dotted black" : "none",
 			opacity: opacity(),
 			transition: "all 50ms",
-			transform: "perspective(1000px) " + `translate3d(${x}px, ${y}px, ${root_z()}px) 
+			transform: "perspective(1000px) " +
+				`translate3d(${x}px, ${y}px, ${root_z()}px) 
 					rotateX(${student.rotation.x}deg)
 					rotateY(${student.rotation.y}deg)
-					rotateZ(${student.rotation.z}deg)
-`,
+					rotateZ(${student.rotation.z}deg)`,
 			"pointer-events": root_z() > -150 ? "none" : tool() == "select" ? "" : "none",
 		})
 	})
@@ -479,6 +472,7 @@ function student_page(student, i) {
 
 	return hdom([".student",
 		{
+			"root-z": root_z,
 			style: style,
 			onclick: () => seek(root_z),
 			onmouseover: () => hover(true),
