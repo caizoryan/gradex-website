@@ -25,8 +25,13 @@ const selected_student = sig(null)
 const tool = sig("select")
 
 const scroll = sig(0)
+
 const mouse_x = sig(0)
 const mouse_y = sig(0)
+
+const rel_mouse_x = mem(() => mouse_x() / window.innerWidth)
+const rel_mouse_y = mem(() => mouse_y() / window.innerHeight)
+
 const autoscroll = sig(true)
 
 /**@param {ToolName} t*/
@@ -156,25 +161,27 @@ document.body.onmousemove = (e) => {
 // (u) COMPONENT: Tool Button
 // -----------------------
 /**@param {ToolName} name*/
-let tool_btn = (name) => button(
-	function() { toggle_tool(name) },
+let check_btn = (name, toggle, eq) => button(
+	toggle,
 	{
 		style: () => CSS.css({
-			opacity: tool() == name ? 1 : .1
+			opacity: eq() ? 1 : .1
 		})
 	},
 	name
 )
 
+// -----------------------
+// (u) COMPONENT: Tool Button
+// -----------------------
+/**@param {ToolName} name*/
+let tool_btn = (name) => check_btn(name, () => toggle_tool(name), () => tool() == name)
+
 /**
  * @param {string} name
  * @param {Tapri.Signal} signal
  * */
-let option_btn = (signal, name) => button(
-	function() { signal(!signal()) },
-	{ style: () => CSS.css({ opacity: signal() ? 1 : .1 }) },
-	name
-)
+let option_btn = (signal, name) => check_btn(name, () => signal(!signal), signal)
 
 // -----------------------
 // (u) COMPONENT: Button
@@ -297,13 +304,47 @@ const Main = () => {
 		() => hdom(label_number_input("height: ", student.dimension.height, v => student.dimension.height = v)),
 	]
 
+	let mul_label_number = (label, getter, setter, mul) => {
+		let _value = sig(getter)
+		eff_on(_value, () => setter(_value() * mul()))
+		eff_on(mul, () => setter(_value() * mul()))
+
+		return [
+			".2d",
+			() => hdom(label_number_input(label, _value, _value)),
+			() => _value() * mul()
+		]
+	}
+
+	/**@param {{name: string, choice: () => number}[]} mul_options*/
+	let choice_mul = (label, getter, setter, mul_options) => {
+		let index = sig(0)
+		let btns = mul_options.map((opt, i) => {
+			let eq = () => index() == i
+			return check_btn(
+				opt.name,
+				() => eq() ? index(0) : index(i),
+				eq)
+		})
+
+		return [
+			".choice",
+			() => hdom(mul_label_number(label, getter, setter, mul_options[index()].choice)),
+			[".btns", ...btns]
+		]
+	}
+
+	let mul_options = [
+		{ name: "mx", choice: rel_mouse_x }, { name: "my", choice: rel_mouse_y }
+	]
+
 	/**@param {Student} student*/
 	let rotation_editor = (student) => [
 		".2d",
 		["h4", "rotation"],
-		() => hdom(label_number_input("x: ", student.rotation.x, v => student.rotation.x = v)),
-		() => hdom(label_number_input("y: ", student.rotation.y, v => student.rotation.y = v)),
-		() => hdom(label_number_input("z: ", student.rotation.z, v => student.rotation.z = v))
+		...Object.entries(student.rotation).map(([key, value]) => () => hdom(
+			choice_mul(key + ": ", value, v => student.rotation[key] = v, mul_options)
+		)),
 	]
 
 	/**@param {Student} student*/
