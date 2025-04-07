@@ -8,6 +8,11 @@ import * as Tapri from "./solid/monke.js"
 let canvas_dom
 let timeout = undefined
 
+const lerp = (start, stop, amt) => amt * (stop - start) + start
+const invlerp = (x, y, a) => clamp((a - x) / (y - x));
+const clamp = (a, min = 0, max = 1) => Math.min(max, Math.max(min, a));
+const range = (x1, y1, x2, y2, a) => lerp(x2, y2, invlerp(x1, y1, a));
+
 /**
  * @type Tapri.Signal<Student> 
  * */
@@ -39,10 +44,14 @@ const seek = (value) => {
 		if (_value > -500 && _value < -150) {
 			return
 		} else if (_value > -150) {
-			scroll_canvas(150)
+			let difference = _value - (-150)
+			let amt = difference * .05
+			scroll_canvas(amt)
 			seek(value)
 		} else {
-			scroll_canvas(-150)
+			let difference = _value - (-150)
+			let amt = difference * .05
+			scroll_canvas(amt)
 			seek(value)
 		}
 	}, 10)
@@ -70,14 +79,33 @@ const images = mem(() => {
 
 /**
  * @typedef {{
+ *	width: number,
+ *	height: number
+ * }} Dimension
+ *
+ * @typedef {{
+ *	x: number,
+ *	y: number,
+ *	z: number
+ * }} Rotation
+ *
+ * @typedef {{
+ *	x: number,
+ *	y: number
+ * }} Transform
+ *
+ * @typedef {{
 		slug: string,
 		name: string,
+
+		dimension: Dimension,
+		transform: Transform,
+		rotation: Rotation
 
 		bio: string,
 		links: string,
 		images: ArenaType.Block[]
 		videos: ArenaType.Block[]
-
 	}} Student
  * @type {() => Student[]}*/
 const students = mem(() => channels.reduce(
@@ -90,6 +118,15 @@ const students = mem(() => channels.reduce(
 		const website = channel.contents.find((block) => block.title == "Website" && block.class == "Link")
 		const links = channel.contents.find((block) => block.title == "Links" && block.class == "Text")
 
+		/**@type Dimension*/
+		const dimension = { width: 800, height: 800 }
+
+		/**@type Transform*/
+		const transform = { x: 5, y: 5 }
+
+		/**@type Rotation*/
+		const rotation = { x: 0, y: 0, z: 0 }
+
 		const images = channel.contents.reduce((acc, block) => {
 			if (block.class == "Image") acc.push(block)
 			return acc
@@ -100,7 +137,7 @@ const students = mem(() => channels.reduce(
 			return acc
 		}, [])
 
-		students.push({ name, images, bio, website, links, videos, slug })
+		students.push({ name, images, bio, website, links, videos, slug, dimension, transform, rotation })
 		return students
 	}, []))
 
@@ -239,14 +276,45 @@ const Main = () => {
 		[".scroll", each(students, student_page)]
 	]
 
+	function label_number_input(label, getter, setter) {
+		return [
+			".label-input",
+			["span.label", label],
+			["input", {
+				value: getter,
+				type: "number",
+				oninput: (e) => {
+					setter(parseInt(e.target.value))
+				}
+			}]
+		]
+	}
+
+	/**@param {Student} student*/
+	let dimension_editor = (student) => [
+		".2d",
+		() => hdom(label_number_input("width: ", student.dimension.width, v => student.dimension.width = v)),
+		() => hdom(label_number_input("height: ", student.dimension.height, v => student.dimension.height = v)),
+	]
+
+	/**@param {Student} student*/
+	let rotation_editor = (student) => [
+		".2d",
+		["h4", "rotation"],
+		() => hdom(label_number_input("x: ", student.rotation.x, v => student.rotation.x = v)),
+		() => hdom(label_number_input("y: ", student.rotation.y, v => student.rotation.y = v)),
+		() => hdom(label_number_input("z: ", student.rotation.z, v => student.rotation.z = v))
+	]
+
 	/**@param {Student} student*/
 	let layer = (student) => {
 		let selected = mem(() => selected_student()?.slug == student.slug)
-		let children = hdom([
+
+		let children = [
 			['p.layer', "name: ", student.name],
 			['p.layer', "bio"],
 			...student.images.map(b => ["p.layer", b.image?.filename])
-		])
+		]
 
 		return hdom(["p.layer", {
 			onclick: () => {
@@ -258,11 +326,10 @@ const Main = () => {
 
 			() => if_then([
 				selected(),
-				children
+				hdom(children)
 			])
 
 		])
-
 	}
 
 	let layers = [
@@ -271,9 +338,27 @@ const Main = () => {
 		[".scroll", each(students, layer)]
 	]
 
+	let properties = () => [
+		".properties",
+		() => hdom(dimension_editor(selected_student())),
+		() => hdom(rotation_editor(selected_student()))
+	]
+
+	let not = (value) => !value
+
 	let sidebar =
 		[".sidebar",
 			[".name", name],
+			() => if_then(
+				[
+					selected_student(),
+					hdom(properties())
+				],
+				[
+					not(selected_student()),
+					hdom(["p", "HEHEHEH"])
+				]
+			),
 			layers,
 			[".metadata",
 				// ["p", 'modified: ', updated],
@@ -282,7 +367,7 @@ const Main = () => {
 		]
 
 	return hdom([
-		loader(),
+		//loader(),
 		[".main",
 			toolbar,
 			canvas,
@@ -312,12 +397,12 @@ function student_page(student, i) {
 	const root_z = mem(() => calc_z(i()))
 	const opacity = mem(() => root_z() > -150 ? (root_z() * -1) / 150 : 1)
 
-	let top = Math.random() * 50
-	let left = Math.random() * 400
+	let top = Math.random() * 10
+	let left = Math.random() * 10
 
 	let style = mem(() => {
-		let x = ((mouse_x() / window.innerWidth) - .5) * (i() * 30)
-		let y = ((mouse_y() / window.innerHeight) - .5) * (i() * 30)
+		let x = student.transform.x + ((mouse_x() / window.innerWidth) - .5) * (i() * 30)
+		let y = student.transform.x + ((mouse_y() / window.innerHeight) - .5) * (i() * 30)
 
 		if (between(root_z(), -550, -100)) selected_student(student)
 
@@ -327,11 +412,16 @@ function student_page(student, i) {
 			left: px(left),
 			top: px(top),
 			"background-color": "#fff8",
-			width: px(800),
-			height: px(800),
+			width: px(student.dimension.width),
+			height: px(student.dimension.height),
 			border: hover() ? "5px dotted black" : "none",
 			opacity: opacity(),
-			transform: "perspective(1000px) " + `translate3d(${x}px, ${y}px, ${root_z()}px)`,
+			transition: "all 50ms",
+			transform: "perspective(1000px) " + `translate3d(${x}px, ${y}px, ${root_z()}px) 
+					rotateX(${student.rotation.x}deg)
+					rotateY(${student.rotation.y}deg)
+					rotateZ(${student.rotation.z}deg)
+`,
 			"pointer-events": root_z() > -150 ? "none" : tool() == "select" ? "" : "none",
 		})
 	})
