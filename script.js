@@ -8,6 +8,28 @@ import * as Tapri from "./solid/monke.js"
 let canvas_dom
 let timeout = undefined
 
+/**
+ * @type Tapri.Signal<Student> 
+ * */
+const selected_student = sig(null)
+
+/**
+ * @typedef {("select" | "scroll" | "none")} ToolName
+ * @type Tapri.Signal<ToolName>
+ * */
+const tool = sig("select")
+
+const scroll = sig(0)
+const mouse_x = sig(0)
+const mouse_y = sig(0)
+const autoscroll = sig(false)
+
+/**@param {ToolName} t*/
+const toggle_tool = (t) => {
+	if (tool() == t) { tool("none") }
+	else { tool(t) }
+}
+
 const translate2D = (x, y) => `translate(${x}, ${y})`
 const scroll_canvas = (value) => canvas_dom.scrollTop += value
 const seek = (value) => {
@@ -82,26 +104,6 @@ const students = mem(() => channels.reduce(
 		return students
 	}, []))
 
-/**
- * @type Tapri.Signal<ArenaType.Block> 
- * */
-const selected_block = sig(null)
-
-/**
- * @typedef {("select" | "scroll" | "none")} ToolName
- * @type Tapri.Signal<ToolName>
- * */
-const tool = sig("select")
-
-/**@param {ToolName} t*/
-const toggle_tool = (t) => {
-	if (tool() == t) { tool("none") }
-	else { tool(t) }
-}
-
-const scroll = sig(0)
-const mouse_x = sig(0)
-const mouse_y = sig(0)
 
 // -----------------------
 // Event Listeners
@@ -204,14 +206,13 @@ function random_rects() {
 const Main = () => {
 	let ref = e => {
 		canvas_dom = e
-		setInterval(x => e.scrollTop += 5, 100)
+		setInterval(x => autoscroll() ? e.scrollTop += 5 : null, 100)
 		e.onscroll = x => scroll(e.scrollTop)
 	}
 
-	let name = mem(() => selected_block() ? selected_block().parent.title : "")
-	let updated = mem(() => selected_block() ? selected_block().updated_at : "")
-	let created = mem(() => selected_block() ? selected_block().created_at : "")
-	let content_type = mem(() => selected_block() ? selected_block().image?.content_type : "")
+	let name = mem(() => selected_student() ? selected_student()?.name : "")
+	// let updated = mem(() => selected_student() ? selected_student_block().updated_at : "")
+	// let created = mem(() => selected_student() ? selected_student_block().created_at : "")
 
 
 	let toolbar = [
@@ -223,17 +224,19 @@ const Main = () => {
 	let canvas = [
 		".canvas",
 		{ ref },
-		[".scroll", each(images, image)]
+		//[".scroll", each(images, image)]
+		[".scroll", each(students, student_page)]
 	]
 
 	/**@param {Student} student*/
 	let layer = (student) =>
 		hdom(["p", {
 			onclick: () => {
-				// seek to first image of student
+				let index = students().findIndex((b) => b.slug == student.slug)
+				seek(() => calc_z(index))
 			},
 			style: () => CSS.css({
-				"background-color": selected_block()?.parent?.slug == student.slug ? "yellow" : "none"
+				"background-color": selected_student()?.slug == student.slug ? "yellow" : "none"
 			})
 		}, student.name])
 
@@ -248,9 +251,9 @@ const Main = () => {
 			[".name", name],
 			layers,
 			[".metadata",
-				["p", 'modified: ', updated],
-				["p", 'created: ', created],
-				["p", 'content type: ', content_type]]
+				// ["p", 'modified: ', updated],
+				// ["p", 'created: ', created],
+			]
 		]
 
 	return hdom([
@@ -266,55 +269,70 @@ const Main = () => {
 
 /**@type {(val: number, min: number, max: number) => boolean}*/
 let between = (val, min, max) => (val > min && val < max)
+let calc_z = (index) => -scroll() + (index * 5000)
 
 /**
  * @param {Student} student 
  * */
 function student_page(student, i) {
-	// will use I to get a position, based on that
-	// lay out images, bio, name and stuff.
-
-}
-
-function image(block, i) {
-	let hover = sig(false)
-	let top = Math.random() * window.innerHeight / 2 - window.innerHeight / 8
-	let left = Math.random() * window.innerWidth / 2 - window.innerWidth / 8
+	// State
+	const hover = sig(false)
 
 	eff_on(hover, () => {
-		if (hover()) selected_block(block)
-		else selected_block(null)
+		if (hover()) selected_student(student)
+		else selected_student(null)
 	})
 
-	const z = mem(() => -scroll() + (i() * 2000))
-	const opacity = mem(() => z() > -150 ? (z() * -1) / 150 : 1)
+	// will use I to get a position, based on that
+	const root_z = mem(() => calc_z(i()))
+	const opacity = mem(() => root_z() > -150 ? (root_z() * -1) / 150 : 1)
+
+	let top = Math.random() * 50
+	let left = Math.random() * 400
 
 	let style = mem(() => {
 		let x = ((mouse_x() / window.innerWidth) - .5) * (i() * 30)
 		let y = ((mouse_y() / window.innerHeight) - .5) * (i() * 30)
 
-		if (between(z(), -550, -100)) selected_block(block)
+		if (between(root_z(), -550, -100)) selected_student(student)
 
 		let { css, px } = CSS
 		return css({
+			position: "fixed",
 			left: px(left),
 			top: px(top),
+			"background-color": "#fff8",
+			width: px(800),
+			height: px(800),
 			border: hover() ? "5px dotted black" : "none",
 			opacity: opacity(),
-			transform: "perspective(1000px) " + `translate3d(${x}px, ${y}px, ${z()}px)`,
-			"pointer-events": z() > -150 ? "none" : tool() == "select" ? "" : "none",
+			transform: "perspective(1000px) " + `translate3d(${x}px, ${y}px, ${root_z()}px)`,
+			"pointer-events": root_z() > -150 ? "none" : tool() == "select" ? "" : "none",
 		})
 	})
 
+	let img = (image, i) => {
+		return hdom(["img", {
+			style: () => CSS.css({
+				transform: "perspective(1000px) " + `translate3d(0,0, ${i() * 50}px)`,
+			}),
+			src: image.image?.display?.url
+		}
+		])
+	}
 
-	return hdom([
-		"img", {
-			src: block.image.display.url,
+	return hdom([".student",
+		{
+			style: style,
+			onclick: () => seek(root_z),
 			onmouseover: () => hover(true),
 			onmouseleave: () => hover(false),
-			onclick: () => seek(z),
-			style: style
-		}])
+		},
+		each(student.images, img)
+	])
+
+	// lay out images, bio, name and stuff.
+
 }
 
 render(Main, document.body)
