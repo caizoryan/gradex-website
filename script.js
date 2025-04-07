@@ -1,4 +1,4 @@
-import { render, mut, sig, mem, eff_on, each } from "./solid/monke.js"
+import { render, mut, sig, mem, eff_on, each, if_then } from "./solid/monke.js"
 import { hdom } from "./solid/hdom/index.js"
 import CSS from "./css/css.js"
 
@@ -22,7 +22,7 @@ const tool = sig("select")
 const scroll = sig(0)
 const mouse_x = sig(0)
 const mouse_y = sig(0)
-const autoscroll = sig(false)
+const autoscroll = sig(true)
 
 /**@param {ToolName} t*/
 const toggle_tool = (t) => {
@@ -129,6 +129,16 @@ let tool_btn = (name) => button(
 	name
 )
 
+/**
+ * @param {string} name
+ * @param {Tapri.Signal} signal
+ * */
+let option_btn = (signal, name) => button(
+	function() { signal(!signal()) },
+	{ style: () => CSS.css({ opacity: signal() ? 1 : .1 }) },
+	name
+)
+
 // -----------------------
 // (u) COMPONENT: Button
 // -----------------------
@@ -217,6 +227,7 @@ const Main = () => {
 
 	let toolbar = [
 		".toolbar",
+		option_btn(autoscroll, "autoscroll"),
 		tool_btn("select"),
 		tool_btn("scroll")
 	]
@@ -229,16 +240,30 @@ const Main = () => {
 	]
 
 	/**@param {Student} student*/
-	let layer = (student) =>
-		hdom(["p", {
+	let layer = (student) => {
+		let selected = mem(() => selected_student()?.slug == student.slug)
+		let children = hdom([
+			['p.layer', "name: ", student.name],
+			['p.layer', "bio"],
+			...student.images.map(b => ["p.layer", b.image?.filename])
+		])
+
+		return hdom(["p.layer", {
 			onclick: () => {
 				let index = students().findIndex((b) => b.slug == student.slug)
 				seek(() => calc_z(index))
 			},
-			style: () => CSS.css({
-				"background-color": selected_student()?.slug == student.slug ? "yellow" : "none"
-			})
-		}, student.name])
+			style: () => CSS.css({ "background-color": selected() ? "yellow" : "none" })
+		}, student.name,
+
+			() => if_then([
+				selected(),
+				children
+			])
+
+		])
+
+	}
 
 	let layers = [
 		".layers",
