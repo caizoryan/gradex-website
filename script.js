@@ -103,12 +103,17 @@ const images = mem(() => {
  * }} Transform
  *
  * @typedef {{
+ *	ms: number,
+ * }} Transition
+ *
+ * @typedef {{
 		slug: string,
 		name: string,
 
 		dimension: Dimension,
 		transform: Transform,
-		rotation: Rotation
+		rotation: Rotation,
+		transition: Transition,
 
 		website: ArenaType.Block,
 		bio: string,
@@ -140,6 +145,9 @@ function init_students(channels) {
 			/**@type Rotation*/
 			const rotation = { x: 0, y: 0, z: 0 }
 
+			/**@type Transition*/
+			const transition = { ms: 50 }
+
 			const images = channel.contents.reduce((acc, block) => {
 				if (block.class == "Image") acc.push(block)
 				return acc
@@ -155,6 +163,7 @@ function init_students(channels) {
 				images,
 				bio,
 				website,
+				transition,
 				links,
 				videos,
 				slug,
@@ -323,6 +332,15 @@ const Main = () => {
 	}
 
 	/**@param {Student} student*/
+	let transition_editor = (student) => [
+		".2d",
+
+		label_number_input("ms: ",
+			() => student.transition.ms,
+			v => student.transition.ms = v),
+	]
+
+	/**@param {Student} student*/
 	let dimension_editor = (student) => [
 		".2d",
 
@@ -380,7 +398,8 @@ const Main = () => {
 	let properties = () => [
 		".properties",
 		() => hdom(dimension_editor(selected_student())),
-		() => hdom(rotation_editor(selected_student()))
+		() => hdom(rotation_editor(selected_student())),
+		() => hdom(transition_editor(selected_student()))
 	]
 
 
@@ -405,7 +424,7 @@ const Main = () => {
 		]
 
 	return hdom([
-		loader(),
+		//loader(),
 		[".main",
 			toolbar,
 			hdom(canvas),
@@ -450,7 +469,7 @@ function student_page(student, i) {
 			height: px(student.dimension.height),
 			border: hover() ? "5px dotted black" : "none",
 			opacity: opacity(),
-			transition: "all 50ms",
+			transition: `all ${student.transition.ms}ms`,
 			transform: "perspective(1000px) " +
 				`translate3d(${x}px, ${y}px, ${root_z()}px) 
 					rotateX(${student.rotation.x}deg)
