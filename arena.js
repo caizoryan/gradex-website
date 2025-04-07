@@ -166,27 +166,31 @@ async function hack_refresh(slug, opts) {
 }
 
 /**
-* @typedef {Object} Channel 
-* @property {number} id
-* @property {string} title
-* @property {Date} created_at
-* @property {Date} updated_at
-* @property {boolean} published
-* @property {boolean} open
-* @property {boolean} collaboration
-* @property {string} slug
-* @property {number} length
-* @property {string} kind
-* @property {string} status
-* @property {number} user_id
-* @property {string} class
-* @property {string} base_class
-* @property {User} user
-* @property {number} total_pages
-* @property {number} current_page
-* @property {number} per
-* @property {number} follower_count
-* @property {(Block | Channel)[]} contents
+* @typedef {("Image" | "Link" | "Text" | "Media" | "Attachment")} Class
+* @typedef {{
+* id: number,
+* title: string,
+* created_at: Date,
+* updated_at: Date
+* published: boolean,
+* open: boolean,
+* collaboration: boolean,
+* slug: string,
+* length: number,
+* kind: string,
+* status: string,
+* user_id: number,
+* class: Class ,
+* base_class: string,
+* user: User,
+* total_pages: number,
+* current_page: number,
+* per: number,
+* follower_count: number,
+* contents: (Block | Channel)[],
+* metadata: {description: string}
+* }} Channel 
+* 
 */
 
 
@@ -205,9 +209,10 @@ async function get_block(slug, opts) {
 
 
 /**
-* @typedef {Object} CreateBlockRequest
-* @property {string} content
-* @property {string=} source
+* @typedef {{
+*   content: string,
+*   source?: string,
+* }} CreateBlockRequest
 * @param {(string | number)} channel_slug 
 * @param {CreateBlockRequest} request_data 
 * @param {Options} opts 
@@ -224,10 +229,11 @@ async function create_block(channel_slug, request_data, opts) {
 }
 
 /**
-* @typedef {Object} UpdateBlockRequest
-* @property {string=} content
-* @property {string=} title
-* @property {string=} description
+* @typedef {{
+   content?: string,
+   title?: string,
+   description?: string,
+}} UpdateBlockRequest
 * @param {number} id 
 * @param {UpdateBlockRequest} request_data 
 * @param {Options} opts 
@@ -258,22 +264,23 @@ async function disconnect_block(channel_slug, id, opts) {
 }
 
 /**
-* @typedef {Object} Block
-  @property {number} id
-  @property {string | null} title
-  @property {Date} updated_at
-  @property {Date} created_at
-  @property {"Available" | "Failure" | "Procesed" | "Processing"} state
-  @property {number} comment_count
-  @property {string} generated_title
-  @property {"Image" | "Text" | "Link" | "Media" | "Attachment"} class
-  @property {"Block"} base_class
-  @property {string | null} content
-  @property {string | null} content_html
-  @property {string | null} description
-  @property {string | null} description_html
-  @property {null | { title?: string; url: string; provider: { name: string; url: string; } | null; }} source
-  @property {null | { content_type: string; display: { url: string }; filename: string; lage: { url: string }, original: { file_size: number; file_size_display: string; url: string; }; square: { url: string }; thumb: { url: string }; updated_at: Date; }} image
+* @typedef {{
+  id: number,
+  title: string | null,
+  updated_at: Date,
+  created_at: Date,
+  state: "Available" | "Failure" | "Procesed" | "Processing",
+  comment_count: number,
+  generated_title: string,
+  class: "Image" | "Text" | "Link" | "Media" | "Attachment",
+  base_class: "Block",
+  content: string | null,
+  content_html: string | null,
+  description: string | null,
+  description_html: string | null,
+  source: null | { title?: string; url: string; provider: { name: string; url: string; } | null; },
+  image: null | { content_type: string; display: { url: string }; filename: string; lage: { url: string }, original: { file_size: number; file_size_display: string; url: string; }; square: { url: string }; thumb: { url: string }; updated_at: Date; },
+}} Block
 */
 
 

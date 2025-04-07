@@ -69,15 +69,14 @@ const sig = (val) => {
   return dual;
 };
 
-let f = sig("")
-
 
 // Dependent Reactivity
 /**
  * Creates a memoized version of the provided callback function.
+ * @template T
  *
- * @param {Function} callback - The callback function to be memoized.
- * @returns {Function} - The memoized value returned by the callback function.
+ * @param {() => T} callback - The callback function to be memoized.
+ * @returns {() => T} - The memoized value returned by the callback function.
  */
 const mem = (callback) => createMemo(callback);
 
