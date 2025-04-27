@@ -19,7 +19,7 @@ const calc_z = (index) => -scroll() + (index * 5000)
 const between = (val, min, max) => (val > min && val < max)
 
 /**
- * @type Tapri.Signal<Student> 
+ * @type Tapri.Signal<null> 
  * */
 const selected_student = sig(null)
 
@@ -70,69 +70,16 @@ fetch("./data.json")
 	.then(_ => init_students(channels))
 
 
-/**
- * @typedef {{
- *	width: number,
- *	height: number
- * }} Dimension
- *
- * @typedef {{
- *	x: number,
- *	y: number,
- *	z: number
- * }} Rotation
- *
- * @typedef {{
- *	x: number,
- *	y: number
- * }} Transform
- *
- * @typedef {{
- *	ms: number,
- * }} Transition
- *
- * @typedef {{
-		slug: string,
-		name: string,
-
-		dimension: Dimension,
-		transform: Transform,
-		rotation: Rotation,
-		transition: Transition,
-
-		bio: string,
-		links: string,
-
-		website: ArenaType.Block,
-		images: ArenaType.Block[]
-		videos: ArenaType.Block[]
-	}} Student
- * @type {Student[]}*/
 const students = mut([])
 
 /**@param {ArenaType.Channel[]} channels */
 function init_students(channels) {
 	channels.reduce(
-		/**@param {Student[]} students */
 		(students, channel) => {
 			// each channel is a student
 			const name = channel.title
 			const bio = channel.metadata.description
 			const slug = channel.slug
-			const website = channel.contents.find((block) => block.title == "Website" && block.class == "Link")
-			const links = channel.contents.find((block) => block.title == "Links" && block.class == "Text")
-
-			/**@type Dimension*/
-			const dimension = { width: 800, height: 800 }
-
-			/**@type Transform*/
-			const transform = { x: 5, y: 5 }
-
-			/**@type Rotation*/
-			const rotation = { x: 0, y: 0, z: 0 }
-
-			/**@type Transition*/
-			const transition = { ms: 50 }
 
 			const images = channel.contents.reduce((acc, block) => {
 				if (block.class == "Image") acc.push(block)
@@ -144,19 +91,7 @@ function init_students(channels) {
 				return acc
 			}, [])
 
-			students.push({
-				name,
-				images,
-				bio,
-				website,
-				transition,
-				links,
-				videos,
-				slug,
-				dimension,
-				transform,
-				rotation
-			})
+			students.push({ name, images, bio, videos, slug })
 
 			return students
 		}, [])
@@ -271,62 +206,6 @@ let rotation_editor = (student) => [
 ]
 
 
-// -----------------------
-// COMPONENT: Loader
-// -----------------------
-function loader() {
-	let blend_mode = sig("")
-	let blend_modes = ["normal", "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn", "hard-light", "soft-light", "difference", "exclusion", "luminosity", "plus-darker", "plus-lighter"]
-	let cur = 0
-
-	setInterval(() => {
-		if (cur++ >= blend_modes.length) cur = 0
-		blend_mode(blend_modes[cur])
-	}, 1500)
-
-	let { css } = CSS
-	let loader = [
-		".loader",
-		{ style: () => css({ "mix-blend-mode": blend_mode() }) },
-		random_rects()
-	]
-
-	return loader
-}
-
-function random_rects() {
-	let { vw, vh, css, px } = CSS
-
-	let dims = (i) => ({
-		x: Math.random() * 35,
-		y: Math.random() * i * 10,
-		w: Math.random() * 60 + 10,
-		h: Math.random() * 30 + 10
-	})
-
-	const box_state = mut([]);
-
-	for (let i = 0; i < 41; i++) {
-		box_state.push(dims(i))
-		setInterval(() => Object.assign(box_state[i], dims(i)), (i + 1) * 400)
-	}
-
-	let box = (e, i) => hdom([".box", {
-		style: () => css({
-			position: "absolute",
-			width: vw(e.w),
-			height: vh(e.h),
-			top: vh(e.y),
-			left: vw(e.x),
-			transform: translate2D(px(mouse_x() / window.innerWidth * ((i() % 4) * 150)), px(mouse_y() / window.innerHeight * ((i() % 4) * 150)))
-		})
-	}])
-
-	return [".rects",
-		each(box_state, box),
-		["h1", "Work In Progress..."]]
-}
-
 
 // -----------------------
 // COMPONENT: Main
@@ -351,11 +230,10 @@ const Main = () => {
 	let canvas = [
 		".canvas",
 		{ ref },
-		[".scroll", () => each(students, student_page)]
+		//	[".scroll", () => each(students, student_page)]
 	]
 
 
-	/**@param {Student} student*/
 	let layer = (student) => {
 		let selected = mem(() => selected_student()?.slug == student.slug)
 
@@ -367,6 +245,7 @@ const Main = () => {
 				...student.images.map(b => ["p.layer", b.image?.filename])
 			])
 		])
+
 		const seek_layer = () => {
 			let index = students.findIndex((b) => b.slug == student.slug)
 			seek(() => calc_z(index))
@@ -421,78 +300,6 @@ const Main = () => {
 			hdom(sidebar)
 		]
 	])
-}
-
-
-
-/**
- * @param {Student} student 
- * */
-function student_page(student, i) {
-	// State
-	const hover = sig(false)
-
-	eff_on(hover, () => {
-		if (hover()) selected_student(student)
-		else selected_student(null)
-	})
-
-	// will use I to get a position, based on that
-	const root_z = mem(() => calc_z(i()))
-	const opacity = mem(() => root_z() > -150 ? (root_z() * -1) / 150 : 1)
-
-	let top = Math.random() * 10
-	let left = Math.random() * 10
-
-	let style = mem(() => {
-		let x = student.transform.x + ((mouse_x() / window.innerWidth) - .5) * (i() * 30)
-		let y = student.transform.x + ((mouse_y() / window.innerHeight) - .5) * (i() * 30)
-		if (between(root_z(), -550, -100)) selected_student(student)
-
-		let { css, px } = CSS
-		return css({
-			position: "fixed",
-			left: px(left),
-			top: px(top),
-			"background-color": "#fff",
-			width: px(student.dimension.width),
-			height: px(student.dimension.height),
-			border: hover() ? "5px dotted black" : "none",
-			opacity: opacity(),
-			transition: `all ${student.transition.ms}ms`,
-			transform: "perspective(1000px) " +
-				`translate3d(${x}px, ${y}px, ${root_z()}px) 
-					rotateX(${student.rotation.x}deg)
-					rotateY(${student.rotation.y}deg)
-					rotateZ(${student.rotation.z}deg)`,
-			"pointer-events": root_z() > -150 ? "none" : tool() == "select" ? "" : "none",
-		})
-	})
-
-	let img = (image, i) => {
-		return hdom(["img", {
-			style: () => CSS.css({
-				//transform: "perspective(1000px) " + `translate3d(0,0, ${i() * 50}px)`,
-				width: "200px",
-				left: CSS.px(i() * 200)
-			}),
-			src: image.image?.display?.url
-		}
-		])
-	}
-
-	return hdom([".student",
-		{
-			"root-z": root_z,
-			style: style,
-			onclick: () => seek(root_z),
-			onmouseover: () => hover(true),
-			onmouseleave: () => hover(false),
-		},
-		each(student.images, img)
-	])
-
-	// lay out images, bio, name and stuff.
 }
 
 render(Main, document.body)
