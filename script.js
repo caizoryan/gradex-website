@@ -63,13 +63,28 @@ const seek = (value) => {
 
 /**@type {Array<ArenaType.Channel>}*/
 const channels = mut([])
+let formsdata
 
-fetch("./data.json")
+fetch("./formsdata.json")
 	.then((res) => res.json())
-	.then(res => res.forEach((r) => channels.push(r)))
-	.then(_ => init_students(channels))
+	.then(res => formsdata = res)
+	.then(() => {
+		fetch("./data.json")
+			.then((res) => res.json())
+			.then(res => res.forEach((r) => channels.push(r)))
+			.then(_ => init_students(channels))
+	})
 
 
+/**
+ * @typedef {{
+ *	name: string,
+ *	slug: string,
+ *	id: number,
+ *	bio: string,
+ *	images: Array<ArenaType.Block>,
+ * }} Student
+ * */
 const students = mut([])
 
 /**@param {ArenaType.Channel[]} channels */
@@ -80,6 +95,10 @@ function init_students(channels) {
 			const name = channel.title
 			const bio = channel.metadata.description
 			const slug = channel.slug
+
+			let data = formsdata.find(e => e.preferred_name == name)
+			console.log("name: ", name)
+			console.log("data: ", data)
 
 			const images = channel.contents.reduce((acc, block) => {
 				if (block.class == "Image") acc.push(block)
@@ -96,6 +115,7 @@ function init_students(channels) {
 			return students
 		}, [])
 		.forEach(s => students.push(s))
+	console.log(channels)
 }
 
 const images = mem(() => students
@@ -173,38 +193,15 @@ function label_number_input(label, getter, setter) {
 	]
 }
 
-// -----------------------
-// (c) COMPONENT: Editors
-// -----------------------
-/**@param {Student} student*/
-let transition_editor = (student) => [
-	".2d",
-	label_number_input("ms: ",
-		() => student.transition.ms,
-		v => student.transition.ms = v),
+let filemanager = [
+	".file-manager",
+	[".scroll", () => each(students, student_page)]
 ]
 
-/**@param {Student} student*/
-let dimension_editor = (student) => [
-	".2d",
-	label_number_input("width: ",
-		() => student.dimension.width,
-		v => student.dimension.width = v),
-
-	label_number_input("height: ",
-		() => student.dimension.height,
-		v => student.dimension.height = v),
-]
-
-/**@param {Student} student*/
-let rotation_editor = (student) => [
-	".2d",
-	["h4", "rotation"],
-	label_number_input("x: ", () => student.rotation.x, v => student.rotation.x = v),
-	label_number_input("y: ", () => student.rotation.y, v => student.rotation.y = v),
-	label_number_input("z: ", () => student.rotation.z, v => student.rotation.z = v),
-]
-
+function student_page(student) {
+	return hdom(
+		[".student", ['h1', student.name]])
+}
 
 
 // -----------------------
@@ -213,12 +210,11 @@ let rotation_editor = (student) => [
 const Main = () => {
 	let ref = e => {
 		canvas_dom = e
-		setInterval(x => autoscroll() ? e.scrollTop += 5 : null, 100)
+		//setInterval(x => autoscroll() ? e.scrollTop += 5 : null, 100)
 		e.onscroll = x => scroll(e.scrollTop)
 	}
 
 	let name = mem(() => selected_student() ? selected_student()?.name : "")
-
 
 	let toolbar = [
 		".toolbar",
@@ -227,11 +223,6 @@ const Main = () => {
 		tool_btn("scroll")
 	]
 
-	let canvas = [
-		".canvas",
-		{ ref },
-		//	[".scroll", () => each(students, student_page)]
-	]
 
 
 	let layer = (student) => {
@@ -279,25 +270,13 @@ const Main = () => {
 	let sidebar =
 		[".sidebar",
 			[".name", name],
-			() => if_then(
-				[
-					selected_student(),
-					hdom(properties)
-				],
-				[
-					not(selected_student()),
-					hdom(["p", "No Student Selected"])
-				]
-			),
 			hdom(layers),
 		]
 
 	return hdom([
 		//loader(),
 		[".main",
-			hdom(toolbar),
-			hdom(canvas),
-			hdom(sidebar)
+			hdom(filemanager),
 		]
 	])
 }

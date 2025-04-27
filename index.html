@@ -49,7 +49,6 @@
 		display: grid;
 		width: 100vw;
 		height: 100vh;
-		grid-template-columns: 70% 30%;
 		overflow: hidden;
 	}
 
@@ -133,25 +132,16 @@
 		z-index: 99;
 	}
 
-	.canvas {
+	.file-manager {
 		overflow-y: scroll;
-		background-color: #3E8D5E;
+
 		background-color: #ddd;
 
+		/* grid */
 		background-size: 40px 40px;
 		background-image:
 			linear-gradient(to right, #2222 1px, transparent 1px),
 			linear-gradient(to bottom, #2222 1px, transparent 1px);
-	}
-
-	.canvas img {
-		width: 600px;
-		position: fixed;
-		padding: 1em;
-	}
-
-	.scroll {
-		height: 100000px;
 	}
 
 	.sidebar {

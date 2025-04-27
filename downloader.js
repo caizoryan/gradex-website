@@ -7,14 +7,11 @@ let data = []
 let list = []
 
 let api = Arena({ auth })
-api.channel("templist")
+api.channel("x-students")
   .get()
   .then((channel) => {
-
     channel.contents.forEach((c) => {
-      if (c.class == "Channel") {
-        list.push(c.slug)
-      }
+      if (c.class == "Channel") { list.push(c.slug) }
     })
 
     run()
