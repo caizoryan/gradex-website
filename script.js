@@ -77,13 +77,34 @@ fetch("./formsdata.json")
 
 
 /**
+ *
+ * @typedef {{
+ *	index : string,
+ *	start_time: string,
+ *	completion_time :string,
+ *	email :string,
+ *	name :string,
+ *	modified_time :string,
+ *	preferred_name :string,
+ *	pronouns :string,
+ *	website :string,
+ *	social_media :string,
+ *	work_email :string,
+ *	project_name :string,
+ *	project_description :string,
+ *	bio :string, 
+ *	comments :string, 
+ * }} SubmissionData
+ *
  * @typedef {{
  *	name: string,
  *	slug: string,
  *	id: number,
  *	bio: string,
  *	images: Array<ArenaType.Block>,
- * }} Student
+ * } & SubmissionData} Student
+ *
+ * @type {Student[]}
  * */
 const students = mut([])
 
@@ -110,12 +131,12 @@ function init_students(channels) {
 				return acc
 			}, [])
 
-			students.push({ name, images, bio, videos, slug })
+			students.push({ name, images, bio, videos, slug, ...data })
 
 			return students
 		}, [])
 		.forEach(s => students.push(s))
-	console.log(channels)
+	console.log(students)
 }
 
 const images = mem(() => students
