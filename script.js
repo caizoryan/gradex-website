@@ -32,9 +32,6 @@ const scroll = sig(0)
 const autoscroll = sig(true)
 const mouse_x = sig(0)
 const mouse_y = sig(0)
-const rel_mouse_x = mem(() => mouse_x() / window.innerWidth)
-const rel_mouse_y = mem(() => mouse_y() / window.innerHeight)
-
 
 /**@param {ToolName} t*/
 const toggle_tool = (t) => {
@@ -72,18 +69,6 @@ fetch("./data.json")
 	.then(res => res.forEach((r) => channels.push(r)))
 	.then(_ => init_students(channels))
 
-const images = mem(() => {
-	return channels.reduce((acc, channel) => {
-		acc.push(channel.contents.reduce((i_acc, block) => {
-			if (block.class == "Image") {
-				block.parent = channel
-				i_acc.push(block)
-			}
-			return i_acc
-		}, []))
-		return acc
-	}, []).flat()
-})
 
 /**
  * @typedef {{
@@ -115,9 +100,10 @@ const images = mem(() => {
 		rotation: Rotation,
 		transition: Transition,
 
-		website: ArenaType.Block,
 		bio: string,
 		links: string,
+
+		website: ArenaType.Block,
 		images: ArenaType.Block[]
 		videos: ArenaType.Block[]
 	}} Student
@@ -177,6 +163,13 @@ function init_students(channels) {
 		.forEach(s => students.push(s))
 }
 
+const images = mem(() => students
+	.reduce((acc, student) => {
+		acc.push(student.images)
+		return acc
+	}, []).flat()
+)
+
 // -----------------------
 // Event Listeners
 // -----------------------
@@ -225,6 +218,57 @@ let button = (click_fn, one, two) => {
 
 	return ["button", atts, text]
 }
+
+// -----------------------
+// (u) COMPONENT: label number input
+// -----------------------
+function label_number_input(label, getter, setter) {
+	return [
+		".label-input",
+		["span.label", label],
+		() => hdom(["input", {
+			value: getter,
+			type: "number",
+			oninput: (e) => {
+				let value = parseInt(e.target.value)
+				if (isNaN(value)) value = 0
+				setter(value)
+			}
+		}])
+	]
+}
+
+// -----------------------
+// (c) COMPONENT: Editors
+// -----------------------
+/**@param {Student} student*/
+let transition_editor = (student) => [
+	".2d",
+	label_number_input("ms: ",
+		() => student.transition.ms,
+		v => student.transition.ms = v),
+]
+
+/**@param {Student} student*/
+let dimension_editor = (student) => [
+	".2d",
+	label_number_input("width: ",
+		() => student.dimension.width,
+		v => student.dimension.width = v),
+
+	label_number_input("height: ",
+		() => student.dimension.height,
+		v => student.dimension.height = v),
+]
+
+/**@param {Student} student*/
+let rotation_editor = (student) => [
+	".2d",
+	["h4", "rotation"],
+	label_number_input("x: ", () => student.rotation.x, v => student.rotation.x = v),
+	label_number_input("y: ", () => student.rotation.y, v => student.rotation.y = v),
+	label_number_input("z: ", () => student.rotation.z, v => student.rotation.z = v),
+]
 
 
 // -----------------------
@@ -295,8 +339,6 @@ const Main = () => {
 	}
 
 	let name = mem(() => selected_student() ? selected_student()?.name : "")
-	// let updated = mem(() => selected_student() ? selected_student_block().updated_at : "")
-	// let created = mem(() => selected_student() ? selected_student_block().created_at : "")
 
 
 	let toolbar = [
@@ -309,99 +351,51 @@ const Main = () => {
 	let canvas = [
 		".canvas",
 		{ ref },
-		//[".scroll", each(images, image)]
-		[".scroll",
-			() => students.map((s, i) => student_page(s, () => i))
-		]
+		[".scroll", () => each(students, student_page)]
 	]
 
-	function label_number_input(label, getter, setter) {
-		return [
-			".label-input",
-			["span.label", label],
-			() => hdom(["input", {
-				value: getter,
-				type: "number",
-				oninput: (e) => {
-					let value = parseInt(e.target.value)
-					if (isNaN(value)) value = 0
-					setter(value)
-				}
-			}])
-		]
-	}
-
-	/**@param {Student} student*/
-	let transition_editor = (student) => [
-		".2d",
-
-		label_number_input("ms: ",
-			() => student.transition.ms,
-			v => student.transition.ms = v),
-	]
-
-	/**@param {Student} student*/
-	let dimension_editor = (student) => [
-		".2d",
-
-		label_number_input("width: ",
-			() => student.dimension.width,
-			v => student.dimension.width = v),
-
-		label_number_input("height: ",
-			() => student.dimension.height,
-			v => student.dimension.height = v),
-	]
-
-	/**@param {Student} student*/
-	let rotation_editor = (student) => [
-		".2d",
-		["h4", "rotation"],
-		label_number_input("x: ", () => student.rotation.x, v => student.rotation.x = v),
-		label_number_input("y: ", () => student.rotation.y, v => student.rotation.y = v),
-		label_number_input("z: ", () => student.rotation.z, v => student.rotation.z = v),
-	]
 
 	/**@param {Student} student*/
 	let layer = (student) => {
 		let selected = mem(() => selected_student()?.slug == student.slug)
 
-		let children = [
-			['p.layer', "name: ", student.name],
-			['p.layer', "bio"],
-			...student.images.map(b => ["p.layer", b.image?.filename])
-		]
-
-		return hdom(["p.layer", {
-			onclick: () => {
-				let index = students.findIndex((b) => b.slug == student.slug)
-				seek(() => calc_z(index))
-			},
-			style: () => CSS.css({ "background-color": selected() ? "yellow" : "none" })
-		}, student.name,
-
-			() => if_then([
-				selected(),
-				hdom(children)
+		let child_nodes = () => if_then([
+			selected(),
+			hdom([
+				['p.layer', "name: ", student.name],
+				['p.layer', "bio"],
+				...student.images.map(b => ["p.layer", b.image?.filename])
 			])
-
 		])
+		const seek_layer = () => {
+			let index = students.findIndex((b) => b.slug == student.slug)
+			seek(() => calc_z(index))
+		}
+
+		return hdom(
+			["p.layer", {
+				onclick: seek_layer,
+				style: () => CSS.css({ "background-color": selected() ? "yellow" : "none" })
+			},
+				student.name,
+				child_nodes
+			])
 	}
 
 	let layers = [
 		".layers",
 		["h4", "Layers"],
-		[".scroll", each(students, layer)]
+		[".scroll", () => each(students, layer)]
 	]
 
 	// figure out how to store these in local storage
-	let properties = () => [
+	let properties = [
 		".properties",
+		["h4", "Properties"],
 		() => hdom(dimension_editor(selected_student())),
 		() => hdom(rotation_editor(selected_student())),
 		() => hdom(transition_editor(selected_student()))
 	]
-
 
 	let sidebar =
 		[".sidebar",
@@ -409,26 +403,22 @@ const Main = () => {
 			() => if_then(
 				[
 					selected_student(),
-					hdom(properties())
+					hdom(properties)
 				],
 				[
 					not(selected_student()),
-					hdom(["p", "HEHEHEH"])
+					hdom(["p", "No Student Selected"])
 				]
 			),
-			layers,
-			[".metadata",
-				// ["p", 'modified: ', updated],
-				// ["p", 'created: ', created],
-			]
+			hdom(layers),
 		]
 
 	return hdom([
 		//loader(),
 		[".main",
-			toolbar,
+			hdom(toolbar),
 			hdom(canvas),
-			sidebar
+			hdom(sidebar)
 		]
 	])
 }
@@ -464,7 +454,7 @@ function student_page(student, i) {
 			position: "fixed",
 			left: px(left),
 			top: px(top),
-			"background-color": "#fff8",
+			"background-color": "#fff",
 			width: px(student.dimension.width),
 			height: px(student.dimension.height),
 			border: hover() ? "5px dotted black" : "none",
@@ -482,7 +472,9 @@ function student_page(student, i) {
 	let img = (image, i) => {
 		return hdom(["img", {
 			style: () => CSS.css({
-				transform: "perspective(1000px) " + `translate3d(0,0, ${i() * 50}px)`,
+				//transform: "perspective(1000px) " + `translate3d(0,0, ${i() * 50}px)`,
+				width: "200px",
+				left: CSS.px(i() * 200)
 			}),
 			src: image.image?.display?.url
 		}
@@ -501,7 +493,6 @@ function student_page(student, i) {
 	])
 
 	// lay out images, bio, name and stuff.
-
 }
 
 render(Main, document.body)
