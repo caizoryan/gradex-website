@@ -9,10 +9,12 @@
 </head>
 
 <style>
+	@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
 	:root {
 		--background: #2222;
 		--text: #222;
-		--highlight: yellow;
+		--highlight: grey;
 
 		--size: 30px;
 		--grid-color: black;
@@ -29,7 +31,7 @@
 	}
 
 	body {
-		font-family: monospace;
+		font-family: "Roboto Mono", monospace;
 	}
 
 	* {
@@ -60,16 +62,51 @@
 		box-shadow: 0 0 15px 8px #2222;
 		display: grid;
 		grid-template-rows: 8% 92%;
+		background-color: #eee;
 	}
 
-	.window .view-area {
+	.window .view-area {}
+
+	.centered {
 		display: flex;
 		justify-content: center;
 		align-items: center;
 		pointer-events: none;
 	}
 
-	.window .bar {}
+	.view-area p {
+		font-family: "Roboto", Helvetica, Arial, sans-serif;
+		padding: 1em;
+		line-height: 1.3em;
+		font-weight: 500;
+	}
+
+	.window .bar {
+		display: flex;
+
+		background-size: 2px 2px;
+		background-image:
+			linear-gradient(45deg, #001194 25%, transparent 25%),
+			linear-gradient(45deg, transparent 75%, #001194 75%),
+			linear-gradient(45deg, transparent 75%, #001194 75%),
+			linear-gradient(45deg, #001194 25%, #fff 25%);
+	}
+
+	.bar .title {
+		font-size: .7rem;
+		padding: .3rem;
+		background-color: white;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.window .bar>* {
+		margin: .5rem;
+	}
+
+	.close {
+		padding: .3rem;
+	}
 
 	button {
 		all: unset;
@@ -186,6 +223,10 @@
 
 		display: grid;
 		grid-template-rows: 8% 92%;
+	}
+
+	.scroll {
+		overflow-y: scroll;
 	}
 
 	.main {

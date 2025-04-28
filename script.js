@@ -127,7 +127,8 @@ function init_students(channels) {
 			}))
 		})
 
-		// FS.add(File("~/students/" + student.preferred_name + "/bio.txt", student.bio))
+		FS.add(File("~/students/" + student.preferred_name + "/bio.txt", { type: "text", content: student.bio }))
+		FS.add(File("~/students/" + student.preferred_name + "/work_description.txt", { type: "text", content: student.project_description }))
 		// FS.add(File("~/students/" + student.preferred_name + "/website.webloc", student.website))
 	})
 
@@ -239,6 +240,7 @@ FS.add(Directory("~/about"))
  * @typedef {{
  *	id: number,
  *	rectangle: {x: number, y: number, w: number, h: number},
+ *	title: string,
  *	file: FileContent,
  * }} Window
  * */
@@ -282,7 +284,7 @@ eff_on(contents, () => {
 		console.log("item", item)
 		if (item.type == "file") {
 			setTimeout(() =>
-				WindowManager.add(item.content),
+				WindowManager.add(item.content, item.location.replace(location(), "")),
 				150 * i + 1
 			)
 		}
@@ -347,16 +349,26 @@ const WindowManager = (function() {
 	let windows = mut([])
 
 	return {
-		/**@param {FileContent} file*/
-		add: (file) => {
+		/**
+		 * @param {FileContent} file
+		 * @param {string} title
+		 * */
+		add: (file, title) => {
 			let found = windows.find(f => (f.file.type == file.type && f.file.content == file.content))
 			if (found) return
 
+			let rectangle = random_pos()
+			if (file.type == "text") {
+				rectangle.w = 30
+			}
+
 			windows.push({
 				id: Math.random() * 99999,
-				rectangle: random_pos(),
+				rectangle,
+				title,
 				file
 			})
+
 		},
 		remove: (id) => {
 			let index = windows.findIndex(e => e.id == id)
@@ -377,7 +389,6 @@ function windowdom(win) {
 		top: CSS.vh(win.rectangle.y),
 		width: CSS.vw(win.rectangle.w),
 		height: CSS.vh(win.rectangle.h),
-		background: "yellow"
 	}))
 
 	let ref = (e) => ref = e
@@ -389,23 +400,24 @@ function windowdom(win) {
 		})
 	})
 
-	if (win.file.type == "image") {
-		return hdom(
-			[".window",
-				{ style, ref },
-				[".bar",
-					["button.close", { onclick: () => WindowManager.remove(win.id) }, "x"]
-				],
-				[".view-area",
-					["img", { src: win.file.content }]
-				]
-			]
-		)
-	}
+	return hdom(
+		[".window",
+			{ style, ref },
+			[".bar",
+				["button.close",
+					{ onclick: () => WindowManager.remove(win.id) },
+					"x"],
+				["h4.title", win.title]
+			],
 
-	else if (win.file.type == "link") {
+			win.file.type == "image" ?
+				[".view-area.centered", ["img", { src: win.file.content }]]
+				: win.file.type == "text" ?
+					[".view-area.scroll", win.file.content.split(`\n`).map(e => ["p", e])]
+					: ["p", "error"]
 
-	}
+		]
+	)
 
 }
 
@@ -413,7 +425,7 @@ function location_item(item) {
 	let click = () => {
 		let content = FS.read(item.location)
 		if (!Array.isArray(content)) {
-			WindowManager.add(content)
+			WindowManager.add(content, item.location.replace(location(), ""))
 		} else {
 			location(item.location)
 		}
