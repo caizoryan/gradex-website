@@ -329,6 +329,7 @@ let filemanager = [
 			style: mem(() => autoopen() ? "" : "opacity: .2;")
 		}, "Auto Open"]
 	],
+
 	[".panes",
 		[".scroll", () => each(contents, location_item)]
 	]
@@ -392,9 +393,12 @@ function windowdom(win) {
 		return hdom(
 			[".window",
 				{ style, ref },
-				["button.top-left.close",
-					{ onclick: () => WindowManager.remove(win.id) }, "x"],
-				["img", { src: win.file.content }]
+				[".bar",
+					["button.close", { onclick: () => WindowManager.remove(win.id) }, "x"]
+				],
+				[".view-area",
+					["img", { src: win.file.content }]
+				]
 			]
 		)
 	}

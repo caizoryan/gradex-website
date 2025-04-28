@@ -56,12 +56,20 @@
 	.window-container {}
 
 	.window {
+		position: fixed;
+		box-shadow: 0 0 15px 8px #2222;
+		display: grid;
+		grid-template-rows: 8% 92%;
+	}
+
+	.window .view-area {
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		position: fixed;
-		box-shadow: 0 0 15px 8px #2222;
+		pointer-events: none;
 	}
+
+	.window .bar {}
 
 	button {
 		all: unset;
@@ -79,7 +87,6 @@
 	.window img {
 		max-width: 98%;
 		max-height: 98%;
-		pointer-events: none;
 	}
 
 	.rects h1 {

@@ -59,7 +59,7 @@ export const drag = (elem, options = {}) => {
 
 
 	function handle_pointerdown(e) {
-		let target = check_target_strict(e.target, e.currentTarget);
+		let target = check_target(e.target, e.currentTarget);
 		if (!target) return;
 		let pann = typeof pan_switch === 'function' ? pan_switch() : pan_switch;
 		if (!pann) return;
