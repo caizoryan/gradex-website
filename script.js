@@ -1,9 +1,10 @@
 import { render, mut, sig, mem, eff_on, each, if_then } from "./solid/monke.js"
+import { drag } from "./drag.js"
 import { hdom } from "./solid/hdom/index.js"
 import CSS from "./css/css.js"
 
 import * as ArenaType from "./arena.js"
-import * as Tapri from "./solid/monke.js"
+import * as chowk from "./solid/monke.js"
 
 let canvas_dom
 let timeout = undefined
@@ -19,13 +20,13 @@ const calc_z = (index) => -scroll() + (index * 5000)
 const between = (val, min, max) => (val > min && val < max)
 
 /**
- * @type Tapri.Signal<null> 
+ * @type chowk.Signal<null> 
  * */
 const selected_student = sig(null)
 
 /**
  * @typedef {("select" | "scroll" | "none")} ToolName
- * @type Tapri.Signal<ToolName>
+ * @type chowk.Signal<ToolName>
  * */
 const tool = sig("select")
 const scroll = sig(0)
@@ -197,7 +198,7 @@ let tool_btn =
 
 /**
  * @param {string} name
- * @param {Tapri.Signal} signal
+ * @param {chowk.Signal} signal
  * */
 let option_btn = (signal, name) => check_btn(name, () => signal(!signal), signal)
 
@@ -391,6 +392,9 @@ const WindowManager = (function() {
 	return {
 		/**@param {FileContent} file*/
 		add: (file) => {
+			let found = windows.find(f => (f.file.type == file.type && f.file.content == file.content))
+			if (found) return
+
 			windows.push({
 				id: Math.random() * 99999,
 				rectangle: random_pos(),
@@ -403,33 +407,39 @@ const WindowManager = (function() {
 				windows.splice(index, 1)
 		},
 
-		render: () => {
-			return hdom([
-				'.windows',
-				each(() => windows, window)
-			])
-		}
+		render: () => each(() => windows, windowdom)
+
 	}
 })()
 
 /**@param {Window} win */
-function window(win) {
-	setTimeout(() => {
-		win.rectangle.x += 10
-	}, 1500)
+function windowdom(win) {
 	let style = mem(() => CSS.css({
 		position: "fixed",
-		top: CSS.vw(win.rectangle.y),
-		left: CSS.vh(win.rectangle.x),
+		left: CSS.vw(win.rectangle.x),
+		top: CSS.vh(win.rectangle.y),
 		width: CSS.vw(win.rectangle.w),
 		height: CSS.vh(win.rectangle.h),
 		background: "yellow"
 	}))
 
+	let ref = (e) => ref = e
+
+	chowk.mounted(() => {
+		console.log("mounted")
+		drag(ref, {
+			set_left: (x) => {
+				console.log("x", x)
+				win.rectangle.x = (x / window.innerWidth) * 100
+			},
+			set_top: (y) => win.rectangle.y = (y / window.innerHeight) * 100
+		})
+	})
+
 	if (win.file.type == "image") {
 		return hdom(
 			[".window",
-				{ style },
+				{ style, ref },
 				["button.top-left",
 					{ onclick: () => WindowManager.remove(win.id) }, "x"],
 				["img", { src: win.file.content }]
@@ -466,7 +476,7 @@ const Main = () => {
 	return hdom([
 		[".main",
 			hdom(filemanager),
-			WindowManager.render()
+			WindowManager.render
 		]
 	])
 }
