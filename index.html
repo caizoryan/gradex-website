@@ -10,9 +10,9 @@
 
 <style>
 	:root {
-		--background: "#2222";
-		--text: "#222";
-		--highlight: "yellow";
+		--background: #2222;
+		--text: #222;
+		--highlight: yellow;
 
 		--size: 30px;
 		--grid-color: black;
@@ -63,6 +63,11 @@
 		all: unset;
 		padding: .1em;
 		cursor: pointer;
+		background-color: var(--background);
+	}
+
+	button:hover {
+		background-color: var(--highlight);
 	}
 
 	.window .close {}
@@ -169,7 +174,7 @@
 		height: 95vh;
 
 		display: grid;
-		grid-template-rows: 5% 95%;
+		grid-template-rows: 10% 90%;
 	}
 
 	.main {

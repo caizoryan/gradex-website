@@ -30,7 +30,7 @@ const selected_student = sig(null)
  * */
 const tool = sig("select")
 const scroll = sig(0)
-const autoscroll = sig(true)
+const autoopen = sig(true)
 const mouse_x = sig(0)
 const mouse_y = sig(0)
 
@@ -150,46 +150,6 @@ document.body.onmousemove = (e) => {
 }
 // -----------------------
 
-
-// -----------------------
-// (u) COMPONENT: Tool Button
-// -----------------------
-/**@param {ToolName} name*/
-let check_btn =
-	(name, toggle, eq) =>
-		button(toggle, {
-			style: () => CSS.css({ opacity: eq() ? 1 : .1 })
-		}, name)
-
-// -----------------------
-// (u) COMPONENT: Tool Button
-// -----------------------
-/**@param {ToolName} name*/
-let tool_btn =
-	(name) =>
-		check_btn(name,
-			() => toggle_tool(name),
-			() => tool() == name)
-
-/**
- * @param {string} name
- * @param {chowk.Signal} signal
- * */
-let option_btn = (signal, name) => check_btn(name, () => signal(!signal), signal)
-
-// -----------------------
-// (u) COMPONENT: Button
-// -----------------------
-let button = (click_fn, one, two) => {
-	let atts = { onclick: click_fn }
-	let text = two
-
-	if (typeof one == "object") Object.assign(atts, one)
-	else if (typeof one == "string") text = one
-
-	return ["button", atts, text]
-}
-
 // -----------------------
 // (u) COMPONENT: label number input
 // -----------------------
@@ -212,7 +172,7 @@ function label_number_input(label, getter, setter) {
 /**
  * @type {{
  *	add: (content: Content) => void
- *	read: (location: string) => (FileContent[] | FileContent)
+ *	read: (location: string) => (Content[] | FileContent)
  * }}
  * */
 const FS = (function() {
@@ -307,12 +267,26 @@ function File(location, content) {
 }
 
 let location = sig("~/")
+/**@type {() => Content[]}*/
 let contents = mem(() => {
 	let content = FS.read(location())
 	if (Array.isArray(content)) {
 		return content
 	}
 	else return []
+})
+
+eff_on(contents, () => {
+	if (!autoopen()) return
+	contents().forEach((item, i) => {
+		console.log("item", item)
+		if (item.type == "file") {
+			setTimeout(() =>
+				WindowManager.add(item.content),
+				150 * i + 1
+			)
+		}
+	})
 })
 
 // need a location manager and a vfs
@@ -344,10 +318,15 @@ let goback = () => {
 //
 // --------------------
 
+
 let filemanager = [
 	".file-manager",
 	[".toolbar",
 		["button.back", { onclick: goback, }, "<"],
+		["button", {
+			onclick: () => autoopen(!autoopen()),
+			style: mem(() => autoopen() ? "" : "opacity: .2;")
+		}, "Auto Open"]
 	],
 	[".panes",
 		[".scroll", () => each(contents, location_item)]
@@ -439,7 +418,6 @@ function location_item(item) {
 
 	return hdom([".location", { onclick: click }, ['p', cleaned]])
 }
-
 
 // -----------------------
 // COMPONENT: Main
