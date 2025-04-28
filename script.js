@@ -77,7 +77,6 @@ fetch("./formsdata.json")
 
 
 /**
- *
  * @typedef {{
  *	index : string,
  *	start_time: string,
@@ -307,6 +306,7 @@ FS.add(Directory("~/images"))
 FS.add(Directory("~/about"))
 
 /**
+ * @typedef {("image" | "link" | "text")} FileType
  * @param {string} location
  * @returns {Directory}
  * */
@@ -361,13 +361,80 @@ let filemanager = [
 			location(next)
 		}
 	}, location],
-	[".windows", () => each(windows, item)],
 	[".scroll", () => each(contents, location_item)]
 ]
 
-let item = (el) => {
-	console.log(el)
-	return hdom([".container", el])
+/**
+ *
+ * @template {FileType} T
+ * @typedef {{type: T, content: string}} FileContent<T>
+ */
+
+/**
+ * @template {FileType} T
+ * @typedef {{
+ *	id: number,
+ *	rectangle: {x: number, y: number, w: number, h: number},
+ *	file: FileContent<T>,
+ * }} Window<T>
+ * */
+
+const WindowManager = (function() {
+	let def = {
+		id: 23123, rectangle: {
+			x: 5, y: 10, w: 30, h: 40
+		}, file: {
+			type: "image",
+			content: "https://d2w9rnfcy7mm78.cloudfront.net/36287468/original_31ce35389cde603010a4de88361764d5.png"
+		}
+	}
+	/**@type {Window<any>[]}*/
+	let windows = mut([def])
+
+	return {
+		add: (window) => { windows.push(window) },
+		remove: (id) => {
+			let index = windows.findIndex(e => e.id == id)
+			if (index != -1)
+				windows.splice(index, 1)
+		},
+
+		render: () => {
+			return hdom([
+				'.windows',
+				each(() => windows, window)
+			])
+		}
+	}
+})()
+
+/**@param {Window<FileType>} win */
+function window(win) {
+	setTimeout(() => {
+		win.rectangle.x += 10
+	}, 1500)
+	let style = mem(() => CSS.css({
+		position: "fixed",
+		top: CSS.vw(win.rectangle.y),
+		left: CSS.vh(win.rectangle.x),
+		width: CSS.vw(win.rectangle.w),
+		height: CSS.vh(win.rectangle.h),
+		background: "yellow"
+	}))
+
+	if (win.file.type == "image") {
+		return hdom(
+			[".window",
+				{ style },
+				["img", { src: win.file.content }]
+			]
+		)
+	}
+
+	else if (win.file.type == "link") {
+
+	}
+
 }
 
 let windows = sig([])
@@ -396,6 +463,7 @@ const Main = () => {
 	return hdom([
 		[".main",
 			hdom(filemanager),
+			WindowManager.render()
 		]
 	])
 }
