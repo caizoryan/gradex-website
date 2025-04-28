@@ -118,8 +118,6 @@ function init_students(channels) {
 			const slug = channel.slug
 
 			let data = formsdata.find(e => e.preferred_name == name)
-			console.log("name: ", name)
-			console.log("data: ", data)
 
 			const images = channel.contents.reduce((acc, block) => {
 				if (block.class == "Image") acc.push(block)
@@ -136,7 +134,19 @@ function init_students(channels) {
 			return students
 		}, [])
 		.forEach(s => students.push(s))
-	console.log(students)
+
+	students.forEach((student) => {
+		FS.add(Directory("~/students/" + student.preferred_name))
+		student.images.forEach(e => {
+			let filename = e.generated_title
+			let image = new Image()
+			image.src = e.image.display.url
+
+			FS.add(File("~/students/" + student.preferred_name + "/" + filename, image))
+		})
+	})
+
+	location("~/students")
 }
 
 const images = mem(() => students
@@ -160,21 +170,21 @@ document.body.onmousemove = (e) => {
 // (u) COMPONENT: Tool Button
 // -----------------------
 /**@param {ToolName} name*/
-let check_btn = (name, toggle, eq) => button(
-	toggle,
-	{
-		style: () => CSS.css({
-			opacity: eq() ? 1 : .1
-		})
-	},
-	name
-)
+let check_btn =
+	(name, toggle, eq) =>
+		button(toggle, {
+			style: () => CSS.css({ opacity: eq() ? 1 : .1 })
+		}, name)
 
 // -----------------------
 // (u) COMPONENT: Tool Button
 // -----------------------
 /**@param {ToolName} name*/
-let tool_btn = (name) => check_btn(name, () => toggle_tool(name), () => tool() == name)
+let tool_btn =
+	(name) =>
+		check_btn(name,
+			() => toggle_tool(name),
+			() => tool() == name)
 
 /**
  * @param {string} name
@@ -214,14 +224,156 @@ function label_number_input(label, getter, setter) {
 	]
 }
 
+/**
+ * @template T
+ * @typedef {{type: "file", location: string, content: T}} File<T>
+ * */
+
+/**
+ * @typedef {{type: "dir", location: string}} Directory
+ * @typedef {(File<any> | Directory)} Content
+ * @type {{
+ *	add: (content: Content) => void
+ *	read: (location: string) => (Content | Content[])
+ * }}
+ * */
+const FS = (function() {
+	/**@type {Map<string, Content>}*/
+	let fs = new Map()
+	let sanitize = location => {
+		let split = location.split("/").filter(e => e != "")
+		let sanitized = split.join("/") + "/"
+		return sanitized
+	}
+
+	return {
+		add: (content) => {
+			// TODO: check if parents are already there if not add...
+			content.location = sanitize(content.location)
+			fs.set(content.location, content)
+		},
+
+		read: (location) => {
+			let content = fs.get(sanitize(location))
+			if (content.type == "file") return content.content
+
+			else {
+				let matcher = location.split("/")
+				if (matcher[matcher.length - 1] == "") matcher.pop()
+				let under = []
+
+				fs.forEach((value, key) => {
+					let tomatch = key.split("/")
+					if (tomatch[tomatch.length - 1] == "") tomatch.pop()
+
+					if (tomatch.length != matcher.length + 1) return
+
+					let matched = matcher.reduce((acc, val, i) =>
+						acc ?
+							// if last was true check again
+							tomatch[i] == val
+								? true
+								: false
+							// if is false will be false
+							: false
+
+						// start with true
+						, true)
+
+					if (matched) under.push(value)
+				})
+
+				// return dir files
+				return under
+			}
+		}
+	}
+})();
+
+FS.add(Directory("~/"))
+FS.add(Directory("~/students"))
+FS.add(Directory("~/images"))
+FS.add(Directory("~/about"))
+
+/**
+ * @param {string} location
+ * @returns {Directory}
+ * */
+function Directory(location) {
+	return { type: "dir", location }
+}
+
+// ~/ 
+// ~/students
+// ~/students/omama-mahmood
+
+/**
+ * @template T
+ * @param {string} location
+ * @param {T} content
+ * @returns {File<T>}
+ * */
+function File(location, content) {
+	return { type: "file", location, content }
+}
+
+let location = sig("~/")
+let contents = mem(() => {
+	let content = FS.read(location())
+	if (Array.isArray(content)) {
+		return content
+	}
+	else return []
+})
+
+// need a location manager and a vfs
+
+// what should a file manager have
+// be able to see folders
+//
+// list view
+// column view
+// gallery view
 let filemanager = [
 	".file-manager",
-	[".scroll", () => each(students, student_page)]
+	["p", location],
+	["button", {
+		onclick: () => {
+			if (location() == "~/") return
+			let next = location()
+				.split("/")
+				.filter(e => e != "")
+				.slice(0, -1)
+				.join("/")
+
+			if (next == "~") next = "~/"
+
+			location(next)
+		}
+	}, "back"],
+	[".windows", () => each(windows, item)],
+	[".scroll", () => each(contents, student_page)]
 ]
 
+let item = (el) => {
+	console.log(el)
+	return hdom([".container", el])
+}
+
+let windows = sig([])
+
 function student_page(student) {
+	let click = () => {
+		let content = FS.read(student.location)
+		if (!Array.isArray(content)) {
+			windows([...windows(), content])
+		} else {
+			location(student.location)
+		}
+	}
+
 	return hdom(
-		[".student", ['h1', student.name]])
+		[".student", { onclick: click }, ['p', student.location]])
 }
 
 
@@ -229,73 +381,7 @@ function student_page(student) {
 // COMPONENT: Main
 // -----------------------
 const Main = () => {
-	let ref = e => {
-		canvas_dom = e
-		//setInterval(x => autoscroll() ? e.scrollTop += 5 : null, 100)
-		e.onscroll = x => scroll(e.scrollTop)
-	}
-
-	let name = mem(() => selected_student() ? selected_student()?.name : "")
-
-	let toolbar = [
-		".toolbar",
-		option_btn(autoscroll, "autoscroll"),
-		tool_btn("select"),
-		tool_btn("scroll")
-	]
-
-
-
-	let layer = (student) => {
-		let selected = mem(() => selected_student()?.slug == student.slug)
-
-		let child_nodes = () => if_then([
-			selected(),
-			hdom([
-				['p.layer', "name: ", student.name],
-				['p.layer', "bio"],
-				...student.images.map(b => ["p.layer", b.image?.filename])
-			])
-		])
-
-		const seek_layer = () => {
-			let index = students.findIndex((b) => b.slug == student.slug)
-			seek(() => calc_z(index))
-		}
-
-		return hdom(
-			["p.layer", {
-				onclick: seek_layer,
-				style: () => CSS.css({ "background-color": selected() ? "yellow" : "none" })
-			},
-				student.name,
-				child_nodes
-			])
-	}
-
-	let layers = [
-		".layers",
-		["h4", "Layers"],
-		[".scroll", () => each(students, layer)]
-	]
-
-	// figure out how to store these in local storage
-	let properties = [
-		".properties",
-		["h4", "Properties"],
-		() => hdom(dimension_editor(selected_student())),
-		() => hdom(rotation_editor(selected_student())),
-		() => hdom(transition_editor(selected_student()))
-	]
-
-	let sidebar =
-		[".sidebar",
-			[".name", name],
-			hdom(layers),
-		]
-
 	return hdom([
-		//loader(),
 		[".main",
 			hdom(filemanager),
 		]
