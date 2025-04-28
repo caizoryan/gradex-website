@@ -347,7 +347,7 @@ let goback = () => {
 let filemanager = [
 	".file-manager",
 	[".toolbar",
-		["button.back", { onclick: goback, }, location],
+		["button.back", { onclick: goback, }, "<"],
 	],
 	[".panes",
 		[".scroll", () => each(contents, location_item)]
