@@ -108,6 +108,14 @@ fetch("./formsdata.json")
  * */
 const students = mut([])
 
+function image(src) {
+
+}
+
+function text(content) {
+
+}
+
 /**@param {ArenaType.Channel[]} channels */
 function init_students(channels) {
 	channels.reduce(
@@ -144,6 +152,9 @@ function init_students(channels) {
 
 			FS.add(File("~/students/" + student.preferred_name + "/" + filename, image))
 		})
+
+		FS.add(File("~/students/" + student.preferred_name + "/bio.txt", student.bio))
+		FS.add(File("~/students/" + student.preferred_name + "/website.webloc", student.website))
 	})
 
 	location("~/students")
@@ -336,7 +347,6 @@ let contents = mem(() => {
 // gallery view
 let filemanager = [
 	".file-manager",
-	["p", location],
 	["button", {
 		onclick: () => {
 			if (location() == "~/") return
@@ -350,9 +360,9 @@ let filemanager = [
 
 			location(next)
 		}
-	}, "back"],
+	}, location],
 	[".windows", () => each(windows, item)],
-	[".scroll", () => each(contents, student_page)]
+	[".scroll", () => each(contents, location_item)]
 ]
 
 let item = (el) => {
@@ -362,18 +372,20 @@ let item = (el) => {
 
 let windows = sig([])
 
-function student_page(student) {
+function location_item(item) {
 	let click = () => {
-		let content = FS.read(student.location)
+		let content = FS.read(item.location)
 		if (!Array.isArray(content)) {
 			windows([...windows(), content])
 		} else {
-			location(student.location)
+			location(item.location)
 		}
 	}
 
+	let cleaned = item.location.replace(location(), "")
+
 	return hdom(
-		[".student", { onclick: click }, ['p', student.location]])
+		[".location", { onclick: click }, ['p', cleaned]])
 }
 
 
