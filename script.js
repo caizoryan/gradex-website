@@ -146,14 +146,13 @@ function init_students(channels) {
 		FS.add(Directory("~/students/" + student.preferred_name))
 		student.images.forEach(e => {
 			let filename = e.generated_title
-			let image = new Image()
-			image.src = e.image.display.url
-
-			FS.add(File("~/students/" + student.preferred_name + "/" + filename, image))
+			FS.add(File("~/students/" + student.preferred_name + "/" + filename, {
+				type: "image", content: e.image.display.url
+			}))
 		})
 
-		FS.add(File("~/students/" + student.preferred_name + "/bio.txt", student.bio))
-		FS.add(File("~/students/" + student.preferred_name + "/website.webloc", student.website))
+		// FS.add(File("~/students/" + student.preferred_name + "/bio.txt", student.bio))
+		// FS.add(File("~/students/" + student.preferred_name + "/website.webloc", student.website))
 	})
 
 	location("~/students")
@@ -235,16 +234,19 @@ function label_number_input(label, getter, setter) {
 }
 
 /**
- * @template T
- * @typedef {{type: "file", location: string, content: T}} File<T>
+ * @typedef {{
+ *	type: "file",
+ *	location: string,
+ *	content: FileContent
+ * }} File
  * */
 
 /**
  * @typedef {{type: "dir", location: string}} Directory
- * @typedef {(File<any> | Directory)} Content
+ * @typedef {(File | Directory)} Content
  * @type {{
  *	add: (content: Content) => void
- *	read: (location: string) => (Content | Content[])
+ *	read: (location: string) => (FileContent[] | FileContent)
  * }}
  * */
 const FS = (function() {
@@ -319,10 +321,9 @@ function Directory(location) {
 // ~/students/omama-mahmood
 
 /**
- * @template T
  * @param {string} location
- * @param {T} content
- * @returns {File<T>}
+ * @param {FileContent} content
+ * @returns {File}
  * */
 function File(location, content) {
 	return { type: "file", location, content }
@@ -366,33 +367,36 @@ let filemanager = [
 
 /**
  *
- * @template {FileType} T
- * @typedef {{type: T, content: string}} FileContent<T>
+ * @typedef {{type: FileType, content: any}} FileContent
  */
 
 /**
- * @template {FileType} T
  * @typedef {{
  *	id: number,
  *	rectangle: {x: number, y: number, w: number, h: number},
- *	file: FileContent<T>,
- * }} Window<T>
+ *	file: FileContent,
+ * }} Window
  * */
+const random_pos = () => {
+	return {
+		x: Math.random() * 55, y: Math.random() * 35,
+		w: Math.random() * 15 + 35, h: 60
+	}
+}
 
 const WindowManager = (function() {
-	let def = {
-		id: 23123, rectangle: {
-			x: 5, y: 10, w: 30, h: 40
-		}, file: {
-			type: "image",
-			content: "https://d2w9rnfcy7mm78.cloudfront.net/36287468/original_31ce35389cde603010a4de88361764d5.png"
-		}
-	}
-	/**@type {Window<any>[]}*/
-	let windows = mut([def])
+	/**@type {Window[]}*/
+	let windows = mut([])
 
 	return {
-		add: (window) => { windows.push(window) },
+		/**@param {FileContent} file*/
+		add: (file) => {
+			windows.push({
+				id: Math.random() * 99999,
+				rectangle: random_pos(),
+				file
+			})
+		},
 		remove: (id) => {
 			let index = windows.findIndex(e => e.id == id)
 			if (index != -1)
@@ -408,7 +412,7 @@ const WindowManager = (function() {
 	}
 })()
 
-/**@param {Window<FileType>} win */
+/**@param {Window} win */
 function window(win) {
 	setTimeout(() => {
 		win.rectangle.x += 10
@@ -426,6 +430,8 @@ function window(win) {
 		return hdom(
 			[".window",
 				{ style },
+				["button.top-left",
+					{ onclick: () => WindowManager.remove(win.id) }, "x"],
 				["img", { src: win.file.content }]
 			]
 		)
@@ -437,13 +443,11 @@ function window(win) {
 
 }
 
-let windows = sig([])
-
 function location_item(item) {
 	let click = () => {
 		let content = FS.read(item.location)
 		if (!Array.isArray(content)) {
-			windows([...windows(), content])
+			WindowManager.add(content)
 		} else {
 			location(item.location)
 		}
@@ -451,8 +455,7 @@ function location_item(item) {
 
 	let cleaned = item.location.replace(location(), "")
 
-	return hdom(
-		[".location", { onclick: click }, ['p', cleaned]])
+	return hdom([".location", { onclick: click }, ['p', cleaned]])
 }
 
 
