@@ -78,31 +78,6 @@ fetch("./formsdata.json")
 
 
 /**
- * @typedef {{
- *	index : string,
- *	start_time: string,
- *	completion_time :string,
- *	email :string,
- *	name :string,
- *	modified_time :string,
- *	preferred_name :string,
- *	pronouns :string,
- *	website :string,
- *	social_media :string,
- *	work_email :string,
- *	project_name :string,
- *	project_description :string,
- *	bio :string, 
- *	comments :string, 
- * }} SubmissionData
- *
- * @typedef {{
- *	name: string,
- *	slug: string,
- *	id: number,
- *	bio: string,
- *	images: Array<ArenaType.Block>,
- * } & SubmissionData} Student
  *
  * @type {Student[]}
  * */
@@ -235,16 +210,6 @@ function label_number_input(label, getter, setter) {
 }
 
 /**
- * @typedef {{
- *	type: "file",
- *	location: string,
- *	content: FileContent
- * }} File
- * */
-
-/**
- * @typedef {{type: "dir", location: string}} Directory
- * @typedef {(File | Directory)} Content
  * @type {{
  *	add: (content: Content) => void
  *	read: (location: string) => (FileContent[] | FileContent)
@@ -310,6 +275,16 @@ FS.add(Directory("~/about"))
 
 /**
  * @typedef {("image" | "link" | "text")} FileType
+ * @typedef {{type: FileType, content: any}} FileContent
+ * @typedef {{
+ *	id: number,
+ *	rectangle: {x: number, y: number, w: number, h: number},
+ *	file: FileContent,
+ * }} Window
+ * */
+
+/**
+ *
  * @param {string} location
  * @returns {Directory}
  * */
@@ -322,6 +297,7 @@ function Directory(location) {
 // ~/students/omama-mahmood
 
 /**
+ *
  * @param {string} location
  * @param {FileContent} content
  * @returns {File}
@@ -347,37 +323,37 @@ let contents = mem(() => {
 // list view
 // column view
 // gallery view
+let goback = () => {
+	if (location() == "~/") return
+	let next = location()
+		.split("/")
+		.filter(e => e != "")
+		.slice(0, -1)
+		.join("/")
+
+	if (next == "~") next = "~/"
+
+	location(next)
+}
+
+// --------------------
+// TOolbar
+// --------------------
+// View area
+//
+//
+// --------------------
+
 let filemanager = [
 	".file-manager",
-	["button", {
-		onclick: () => {
-			if (location() == "~/") return
-			let next = location()
-				.split("/")
-				.filter(e => e != "")
-				.slice(0, -1)
-				.join("/")
-
-			if (next == "~") next = "~/"
-
-			location(next)
-		}
-	}, location],
-	[".scroll", () => each(contents, location_item)]
+	[".toolbar",
+		["button.back", { onclick: goback, }, location],
+	],
+	[".panes",
+		[".scroll", () => each(contents, location_item)]
+	]
 ]
 
-/**
- *
- * @typedef {{type: FileType, content: any}} FileContent
- */
-
-/**
- * @typedef {{
- *	id: number,
- *	rectangle: {x: number, y: number, w: number, h: number},
- *	file: FileContent,
- * }} Window
- * */
 const random_pos = () => {
 	return {
 		x: Math.random() * 55, y: Math.random() * 35,
@@ -426,12 +402,8 @@ function windowdom(win) {
 	let ref = (e) => ref = e
 
 	chowk.mounted(() => {
-		console.log("mounted")
 		drag(ref, {
-			set_left: (x) => {
-				console.log("x", x)
-				win.rectangle.x = (x / window.innerWidth) * 100
-			},
+			set_left: (x) => win.rectangle.x = (x / window.innerWidth) * 100,
 			set_top: (y) => win.rectangle.y = (y / window.innerHeight) * 100
 		})
 	})
@@ -440,7 +412,7 @@ function windowdom(win) {
 		return hdom(
 			[".window",
 				{ style, ref },
-				["button.top-left",
+				["button.top-left.close",
 					{ onclick: () => WindowManager.remove(win.id) }, "x"],
 				["img", { src: win.file.content }]
 			]
@@ -482,3 +454,41 @@ const Main = () => {
 }
 
 render(Main, document.body)
+
+
+/**
+ * @typedef {{
+ *	index : string,
+ *	start_time: string,
+ *	completion_time :string,
+ *	email :string,
+ *	name :string,
+ *	modified_time :string,
+ *	preferred_name :string,
+ *	pronouns :string,
+ *	website :string,
+ *	social_media :string,
+ *	work_email :string,
+ *	project_name :string,
+ *	project_description :string,
+ *	bio :string, 
+ *	comments :string, 
+ * }} SubmissionData
+ *
+ * @typedef {{
+ *	name: string,
+ *	slug: string,
+ *	id: number,
+ *	bio: string,
+ *	images: Array<ArenaType.Block>,
+ * } & SubmissionData} Student
+ *
+ * @typedef {{
+ *	type: "file",
+ *	location: string,
+ *	content: FileContent
+ * }} File
+ *
+ * @typedef {{type: "dir", location: string}} Directory
+ * @typedef {(File | Directory)} Content
+ * */

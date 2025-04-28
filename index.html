@@ -10,6 +10,10 @@
 
 <style>
 	:root {
+		--background: "#2222";
+		--text: "#222";
+		--highlight: "yellow";
+
 		--size: 30px;
 		--grid-color: black;
 	}
@@ -29,6 +33,12 @@
 		margin: 0;
 	}
 
+	.top-left {
+		position: absolute;
+		left: .5em;
+		top: .5em;
+	}
+
 	.rects {
 		position: fixed;
 		top: 0;
@@ -46,17 +56,21 @@
 		justify-content: center;
 		align-items: center;
 		position: fixed;
+		box-shadow: 0 0 10px 50px #2222;
 	}
 
-	.top-left {
-		position: absolute;
-		left: .5em;
-		top: .5em;
+	button {
+		all: unset;
+		padding: .1em;
+		cursor: pointer;
 	}
+
+	.window .close {}
 
 	.window img {
 		max-width: 98%;
 		max-height: 98%;
+		pointer-events: none;
 	}
 
 	.rects h1 {
@@ -71,6 +85,7 @@
 		height: 100vh;
 		overflow: hidden;
 	}
+
 
 	.location {
 		padding: .1em;
@@ -138,26 +153,26 @@
 		padding-bottom: .25em;
 	}
 
-	.toolbar {
-		position: fixed;
-		left: 1em;
-		top: 1em;
-		display: flex;
-		flex-direction: column;
-	}
+	.file-manager .toolbar {}
 
-	.toolbar button {
-		padding: .5em;
-		border: 1px solid #2222;
-		border-radius: 5px;
-		z-index: 99;
+	.file-manager>* {
+		padding: 1rem;
 	}
 
 	.file-manager {
 		overflow-y: scroll;
-
 		background-color: #ddd;
+		position: fixed;
+		left: 1em;
+		top: 1em;
+		width: 95vw;
+		height: 95vh;
 
+		display: grid;
+		grid-template-rows: 5% 95%;
+	}
+
+	.main {
 		/* grid */
 		background-size: 40px 40px;
 		background-image:
