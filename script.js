@@ -297,6 +297,7 @@ eff_on(contents, () => {
 // list view
 // column view
 // gallery view
+
 let goback = () => {
 	if (location() == "~/") return
 	let next = location()
