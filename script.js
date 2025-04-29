@@ -273,6 +273,7 @@ function File(location, content) {
 }
 
 let location = sig("~/")
+
 /**@type {() => Content[]}*/
 let contents = mem(() => {
 	let content = FS.read(location())
@@ -331,25 +332,50 @@ eff_on(grid, () => {
 	}
 })
 
-let filemanager = [
-	".file-manager",
-	[".toolbar",
-		// front back
-		["button.back", { onclick: goback, }, "<"],
-		["button.back", { onclick: goback, }, ">"],
+let filemanager = () => {
+	let rectangle = mut({
+		x: Math.random() * 10,
+		y: Math.random() * 10,
+		w: 90,
+		h: 90
+	})
+
+	let style = mem(() => CSS.css({
+		position: "fixed",
+		left: CSS.vw(rectangle.x),
+		top: CSS.vh(rectangle.y),
+		width: CSS.vw(rectangle.w),
+		height: CSS.vh(rectangle.h),
+	}))
+
+	let ref = (e) => ref = e
+
+	chowk.mounted(() => {
+		drag(ref, {
+			set_left: (x) => rectangle.x = (x / window.innerWidth) * 100,
+			set_top: (y) => rectangle.y = (y / window.innerHeight) * 100
+		})
+	})
+
+	return hdom([
+		".file-manager", { ref, style: style },
+		[".toolbar",
+			// front back
+			["button.back", { onclick: goback, }, "<"],
+			["button.back", { onclick: goback, }, ">"],
 
 
-		// auto open
-		togglebtn(autoopen, "Auto Open"),
-		togglebtn(grid, "grid"),
-		togglebtn(list, "list")
+			// auto open
+			togglebtn(autoopen, "Auto Open"),
+			togglebtn(grid, "grid"),
+			togglebtn(list, "list")
 
-		// views
-	],
+			// views
+		],
 
-	[".pane", { view: view },
-		() => each(contents, location_item)]
-]
+		[".pane", { view: view }, each(contents, location_item)]
+	])
+}
 
 const random_pos = () => {
 	return {
@@ -524,7 +550,7 @@ function location_item(item) {
 const Main = () => {
 	return hdom([
 		[".main",
-			hdom(filemanager),
+			filemanager,
 			WindowManager.render
 		]
 	])
