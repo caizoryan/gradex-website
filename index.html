@@ -16,6 +16,8 @@
 		--text: #222;
 		--highlight: grey;
 
+		--some: #D92F85;
+
 		--size: 30px;
 		--grid-color: black;
 	}
@@ -37,6 +39,7 @@
 	* {
 		padding: 0;
 		margin: 0;
+
 	}
 
 	.top-left {
@@ -124,10 +127,20 @@
 
 		background-size: 2px 2px;
 		background-image:
-			linear-gradient(45deg, #001194 25%, transparent 25%),
-			linear-gradient(45deg, transparent 75%, #001194 75%),
-			linear-gradient(45deg, transparent 75%, #001194 75%),
-			linear-gradient(45deg, #001194 25%, #fff 25%);
+			linear-gradient(45deg, var(--some) 25%, transparent 25%),
+			linear-gradient(45deg, transparent 75%, var(--some) 75%),
+			linear-gradient(45deg, transparent 75%, var(--some) 75%),
+			linear-gradient(45deg, var(--some) 25%, #fff 25%);
+
+		box-shadow:
+			2px 2px 1px 0px #fff6 inset,
+			-2px -2px 1px 0px #2226 inset;
+	}
+
+	iframe {
+		all: unset;
+		width: 100%;
+		height: 100%;
 	}
 
 	.bar .title {
@@ -146,11 +159,23 @@
 		padding: .3rem;
 	}
 
+
+
+	/* CSS */
 	button {
 		all: unset;
 		padding: .1em;
 		cursor: pointer;
-		background-color: var(--background);
+		border: 0;
+		box-shadow:
+			2px 2px 1px 0px #fff6 inset,
+			-2px -2px 1px 0px #2226 inset;
+		text-align: center;
+		font-weight: 600;
+		color: #000;
+		transition-property: transform, opacity;
+		transition-duration: .04s, .02s;
+		background-color: #aaa;
 	}
 
 	button:hover {
@@ -236,8 +261,12 @@
 	}
 
 	.file-manager .toolbar {
-		background-color: #001194;
+		background-color: var(--some);
 		color: white;
+
+		box-shadow:
+			2px 2px 1px 0px #fff6 inset,
+			-2px -2px 1px 0px #2226 inset;
 	}
 
 	.file-manager>* {
@@ -252,7 +281,7 @@
 		width: 95vw;
 		height: 95vh;
 
-		border: 1.5px solid #001194;
+		border: 1.5px solid var(--some);
 		box-shadow: 0 0 15px 8px #2222;
 
 		display: grid;
