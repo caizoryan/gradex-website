@@ -5,6 +5,7 @@ export const drag = (elem, options = {}) => {
 	const bound = (['inner', 'outer', 'none'].includes(options.bound)) ? options.bound : 'inner';
 	const set_left = options.set_left ? options.set_left : (left) => { elem.style.left = left + "px"; };
 	const set_top = options.set_top ? options.set_top : (top) => { elem.style.top = top + "px"; };
+	const onstart = options.onstart ? options.onstart : () => null;
 
 	// For panning (translate)
 	let lastPosX, lastPosY;					// Needed because of decimals 
@@ -66,6 +67,7 @@ export const drag = (elem, options = {}) => {
 		e.preventDefault();
 		e.stopPropagation();
 
+		onstart()
 		target.style.cursor = 'none'
 
 		// Set Last Element Position. Needed because event offset doesn't have decimals. And decimals will be needed when dragging

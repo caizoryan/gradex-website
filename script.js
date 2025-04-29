@@ -8,6 +8,7 @@ import * as chowk from "./solid/monke.js"
 
 let canvas_dom
 let timeout = undefined
+let zindex = 0
 
 const lerp = (start, stop, amt) => amt * (stop - start) + start
 const invlerp = (x, y, a) => clamp((a - x) / (y - x));
@@ -25,20 +26,15 @@ const between = (val, min, max) => (val > min && val < max)
 const selected_student = sig(null)
 
 /**
- * @typedef {("select" | "scroll" | "none")} ToolName
- * @type chowk.Signal<ToolName>
+ * @typedef {("list" | "grid")} Views
+ * @type chowk.Signal<View>
  * */
-const tool = sig("select")
+const view = sig("grid")
 const scroll = sig(0)
 const autoopen = sig(true)
 const mouse_x = sig(0)
 const mouse_y = sig(0)
 
-/**@param {ToolName} t*/
-const toggle_tool = (t) => {
-	if (tool() == t) { tool("none") }
-	else { tool(t) }
-}
 
 const translate2D = (x, y) => `translate(${x}, ${y})`
 const scroll_canvas = (value) => canvas_dom.scrollTop += value
@@ -124,12 +120,20 @@ function init_students(channels) {
 			let filename = e.generated_title
 			FS.add(File("~/students/" + student.preferred_name + "/" + filename, {
 				type: "image", content: e.image.display.url
+
+			}))
+		})
+
+		student.videos.forEach(e => {
+			let filename = e.generated_title
+			FS.add(File("~/students/" + student.preferred_name + "/" + filename, {
+				type: "video", content: e.attachment.url
 			}))
 		})
 
 		FS.add(File("~/students/" + student.preferred_name + "/bio.txt", { type: "text", content: student.bio }))
 		FS.add(File("~/students/" + student.preferred_name + "/work_description.txt", { type: "text", content: student.project_description }))
-		// FS.add(File("~/students/" + student.preferred_name + "/website.webloc", student.website))
+		if (student.website !== "") FS.add(File("~/students/" + student.preferred_name + "/website.webloc", { type: "link", content: student.website }))
 	})
 
 	location("~/students")
@@ -235,7 +239,7 @@ FS.add(Directory("~/images"))
 FS.add(Directory("~/about"))
 
 /**
- * @typedef {("image" | "link" | "text")} FileType
+ * @typedef {("image" | "link" | "text" | "video")} FileType
  * @typedef {{type: FileType, content: any}} FileContent
  * @typedef {{
  *	id: number,
@@ -278,18 +282,6 @@ let contents = mem(() => {
 	else return []
 })
 
-eff_on(contents, () => {
-	if (!autoopen()) return
-	contents().forEach((item, i) => {
-		console.log("item", item)
-		if (item.type == "file") {
-			setTimeout(() =>
-				WindowManager.add(item.content, item.location.replace(location(), "")),
-				150 * i + 1
-			)
-		}
-	})
-})
 
 // need a location manager and a vfs
 
@@ -321,20 +313,42 @@ let goback = () => {
 //
 // --------------------
 
+let togglebtn = (signal, name) => ["button", { onclick: () => signal(!signal()), style: mem(() => signal() ? "" : "opacity: .2;") }, name]
+let grid = sig(false)
+let list = sig(true)
+
+eff_on(list, () => {
+	if (list()) {
+		grid(false)
+		view("list")
+	}
+})
+
+eff_on(grid, () => {
+	if (grid()) {
+		list(false)
+		view("grid")
+	}
+})
 
 let filemanager = [
 	".file-manager",
 	[".toolbar",
+		// front back
 		["button.back", { onclick: goback, }, "<"],
-		["button", {
-			onclick: () => autoopen(!autoopen()),
-			style: mem(() => autoopen() ? "" : "opacity: .2;")
-		}, "Auto Open"]
+		["button.back", { onclick: goback, }, ">"],
+
+
+		// auto open
+		togglebtn(autoopen, "Auto Open"),
+		togglebtn(grid, "grid"),
+		togglebtn(list, "list")
+
+		// views
 	],
 
-	[".panes",
-		[".scroll", () => each(contents, location_item)]
-	]
+	[".pane", { view: view },
+		() => each(contents, location_item)]
 ]
 
 const random_pos = () => {
@@ -368,7 +382,14 @@ const WindowManager = (function() {
 				title,
 				file
 			})
+		},
 
+		windows: () => windows,
+
+		isopen: (file) => {
+			let found = windows.find(f => (f.file.type == file.type && f.file.content == file.content))
+			if (found) return true
+			else return false
 		},
 		remove: (id) => {
 			let index = windows.findIndex(e => e.id == id)
@@ -381,46 +402,94 @@ const WindowManager = (function() {
 	}
 })()
 
+eff_on(contents, () => {
+	if (!autoopen()) return
+	let fileeq = (file1, file2) => (file2.type == file1.type && file2.content == file1.content)
+
+	WindowManager
+		.windows()
+		.forEach((window, i) => {
+			let found = contents().find((file) => fileeq(file, window.file))
+			console.log("found", found)
+			if (!found) setTimeout(() =>
+				WindowManager.remove(window.id),
+				100 * i + 1)
+		})
+
+	contents().forEach((item, i) => {
+		if (item.type == "file") {
+			setTimeout(() =>
+				WindowManager.add(item.content, item.location.replace(location(), "")),
+				150 * i + 1)
+		}
+	})
+})
+
 /**@param {Window} win */
 function windowdom(win) {
+	let z = sig(0)
 	let style = mem(() => CSS.css({
 		position: "fixed",
 		left: CSS.vw(win.rectangle.x),
 		top: CSS.vh(win.rectangle.y),
 		width: CSS.vw(win.rectangle.w),
 		height: CSS.vh(win.rectangle.h),
+		"z-index": z()
 	}))
 
 	let ref = (e) => ref = e
 
 	chowk.mounted(() => {
 		drag(ref, {
+			onstart: () => {
+				zindex++
+				z(zindex)
+			},
 			set_left: (x) => win.rectangle.x = (x / window.innerWidth) * 100,
 			set_top: (y) => win.rectangle.y = (y / window.innerHeight) * 100
 		})
 	})
 
+	let viewer = file => {
+		switch (file.type) {
+			case "image":
+				return [".view-area.centered", ["img", { src: file.content }]]
+
+			case "text":
+				return [".view-area.scroll",
+					file.content.split(`\n`).map(e => ["p", e])
+				]
+
+			case "video":
+				return [".view-area.centered", ["video", { controls: true, src: file.content }]]
+
+			case "link":
+				return ["iframe", {
+					src: file.content,
+					width: "100%",
+					height: "100%"
+				}]
+			default:
+				return ["p", "unkown filetype"]
+		}
+	}
+
 	return hdom(
 		[".window",
 			{ style, ref },
 			[".bar",
-				["button.close",
-					{ onclick: () => WindowManager.remove(win.id) },
-					"x"],
+				["button.close", { onclick: () => WindowManager.remove(win.id) }, "x"],
 				["h4.title", win.title]
 			],
 
-			win.file.type == "image" ?
-				[".view-area.centered", ["img", { src: win.file.content }]]
-				: win.file.type == "text" ?
-					[".view-area.scroll", win.file.content.split(`\n`).map(e => ["p", e])]
-					: ["p", "error"]
+			viewer(win.file)
 
 		]
 	)
 
 }
 
+/**@param {Content} item */
 function location_item(item) {
 	let click = () => {
 		let content = FS.read(item.location)
@@ -431,9 +500,22 @@ function location_item(item) {
 		}
 	}
 
-	let cleaned = item.location.replace(location(), "")
+	let cleaned = item.location.replace(location(), "").replace("/", "")
 
-	return hdom([".location", { onclick: click }, ['p', cleaned]])
+	let icon = () => {
+		if (item.type == "file") {
+			if (item.content.type == "image") return ["img.icon", { src: item.content.content }]
+			return ["img.icon", { src: "./assets/file.png" }]
+		}
+		else return ["img.icon", { src: "./assets/folder.png" }]
+	}
+
+	return hdom([
+		".location",
+		{ onclick: click },
+		icon(),
+		['p', cleaned]
+	])
 }
 
 // -----------------------

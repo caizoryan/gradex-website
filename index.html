@@ -45,17 +45,47 @@
 		top: .5em;
 	}
 
-	.rects {
-		position: fixed;
-		top: 0;
-		left: 0;
-		z-index: 100 background-color: white;
-		width: 100vh;
-		height: 100vw;
-		pointer-events: none;
+	.window-container {}
+
+	.pane {
+		overflow-y: scroll;
 	}
 
-	.window-container {}
+
+	.pane[view="grid"] .location {
+		height: min-content;
+		display: inline-block;
+		width: 300px;
+		margin-bottom: 1em;
+	}
+
+	.pane .location p {
+		font-size: .8rem;
+		height: 1.4em;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		width: 80%;
+	}
+
+	.pane[view="list"] .location {
+		grid-template-columns: 3em auto;
+	}
+
+	.location {
+		padding: .1em;
+		cursor: pointer;
+		display: grid;
+	}
+
+	.location p {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.location:hover {
+		transform: skewX(15deg);
+	}
 
 	.window {
 		position: fixed;
@@ -71,7 +101,14 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		pointer-events: none;
+		/* pointer-events: none; */
+	}
+
+	.icon {
+		display: inline-block;
+		margin: auto;
+		max-width: 90%;
+		max-height: 90%;
 	}
 
 	.view-area p {
@@ -83,6 +120,7 @@
 
 	.window .bar {
 		display: flex;
+		cursor: pointer;
 
 		background-size: 2px 2px;
 		background-image:
@@ -121,7 +159,8 @@
 
 	.window .close {}
 
-	.window img {
+	.window img,
+	.window video {
 		max-width: 98%;
 		max-height: 98%;
 	}
@@ -139,16 +178,6 @@
 		overflow: hidden;
 	}
 
-
-	.location {
-		padding: .1em;
-		cursor: pointer;
-	}
-
-	.location:hover {
-		background-color: black;
-		color: white;
-	}
 
 	img {
 		transition: all 50ms;
@@ -213,7 +242,6 @@
 	}
 
 	.file-manager {
-		overflow-y: scroll;
 		background-color: #ddd;
 		position: fixed;
 		left: 1em;
@@ -227,6 +255,7 @@
 
 	.scroll {
 		overflow-y: scroll;
+		height: 100%;
 	}
 
 	.main {
