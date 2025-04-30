@@ -379,8 +379,10 @@ let filemanager = () => {
 
 const random_pos = () => {
 	return {
-		x: Math.random() * 55, y: Math.random() * 35,
-		w: Math.random() * 15 + 35, h: 60
+		x: Math.random() * 25 + 25,
+		y: Math.random() * 35,
+		w: Math.random() * 35 + 25,
+		h: 60
 	}
 }
 
@@ -398,8 +400,11 @@ const WindowManager = (function() {
 			if (found) return
 
 			let rectangle = random_pos()
-			if (file.type == "text") {
-				rectangle.w = 30
+			if (file.type == "text") rectangle.w = 30
+			if (file.type == "link") rectangle.w = 50
+			if (file.type == "image" && title.includes("headshot")) {
+				rectangle.w = 20
+				rectangle.h = 40
 			}
 
 			windows.push({
@@ -424,7 +429,6 @@ const WindowManager = (function() {
 		},
 
 		render: () => each(() => windows, windowdom)
-
 	}
 })()
 
@@ -432,21 +436,26 @@ eff_on(contents, () => {
 	if (!autoopen()) return
 	let fileeq = (file1, file2) => (file2.type == file1.type && file2.content == file1.content)
 
+	// remove website first
+	let website = WindowManager.windows().find(e => e.file.type == "link")
+	if (website) {
+		let found = contents().find(e => fileeq(e, website.file))
+		if (!found) WindowManager.remove(website.id)
+	}
+
+	// remove rest
 	WindowManager
 		.windows()
 		.forEach((window, i) => {
 			let found = contents().find((file) => fileeq(file, window.file))
-			console.log("found", found)
-			if (!found) setTimeout(() =>
-				WindowManager.remove(window.id),
-				100 * i + 1)
+			if (!found) setTimeout(() => WindowManager.remove(window.id), 100 * i + 1)
 		})
 
 	contents().forEach((item, i) => {
 		if (item.type == "file") {
 			setTimeout(() =>
 				WindowManager.add(item.content, item.location.replace(location(), "")),
-				150 * i + 1)
+				350 * i + 1)
 		}
 	})
 })
