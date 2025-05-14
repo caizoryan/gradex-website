@@ -16,15 +16,30 @@
 		--text: #222;
 		--highlight: grey;
 
-		--some: #D92F85;
+		--some: #1F1E1D;
 
 		--size: 30px;
 		--grid-color: black;
 	}
 
 	@font-face {
-		font-family: "any";
-		src: url("./text.otf");
+		font-family: "dep";
+		src: url("./dep.otf");
+	}
+
+	@font-face {
+		font-family: "chicago";
+		src: url("./font.woff2");
+	}
+
+	@font-face {
+		font-family: "runatype";
+		src: url("./runatype.ttf");
+	}
+
+	@font-face {
+		font-family: "pixelarial";
+		src: url("./pixelarial.woff2");
 	}
 
 	.horizontal-space {
@@ -33,12 +48,13 @@
 	}
 
 	body {
-		font-family: "Roboto Mono", monospace;
+		font-family: "dep", monospace;
 	}
 
 	* {
 		padding: 0;
 		margin: 0;
+		font-weight: 100;
 
 	}
 
@@ -63,7 +79,7 @@
 	}
 
 	.pane .location p {
-		font-size: .8rem;
+		font-size: 1rem;
 		height: 1.4em;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -77,6 +93,7 @@
 
 	.location {
 		padding: .1em;
+		padding-left: .5em;
 		cursor: pointer;
 		display: grid;
 	}
@@ -95,7 +112,8 @@
 		box-shadow: 0 0 15px 8px #2222;
 		display: grid;
 		grid-template-rows: 2.5em calc(100% - 2.5em);
-		background-color: #fff;
+		border: 1.5px solid black;
+		background-color: #F9F2E9;
 	}
 
 	.window .view-area {}
@@ -125,16 +143,16 @@
 		display: flex;
 		cursor: pointer;
 
-		background-size: 2px 2px;
-		background-image:
-			linear-gradient(45deg, var(--some) 25%, transparent 25%),
-			linear-gradient(45deg, transparent 75%, var(--some) 75%),
-			linear-gradient(45deg, transparent 75%, var(--some) 75%),
-			linear-gradient(45deg, var(--some) 25%, #fff 25%);
+		/* background-size: 2px 2px; */
+		/* background-image: */
+		/* 	linear-gradient(45deg, var(--some) 25%, transparent 25%), */
+		/* 	linear-gradient(45deg, transparent 75%, var(--some) 75%), */
+		/* 	linear-gradient(45deg, transparent 75%, var(--some) 75%), */
+		/* 	linear-gradient(45deg, var(--some) 25%, #fff 25%); */
 
-		box-shadow:
-			2px 2px 1px 0px #fff6 inset,
-			-2px -2px 1px 0px #2226 inset;
+		/* box-shadow: */
+		/* 	2px 2px 1px 0px #fff6 inset, */
+		/* 	-2px -2px 1px 0px #2226 inset; */
 	}
 
 	iframe {
@@ -146,7 +164,7 @@
 	.bar .title {
 		font-size: .7rem;
 		padding: .3rem;
-		background-color: white;
+		background-color: #f9f2e9;
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
@@ -167,15 +185,15 @@
 		padding: .1em;
 		cursor: pointer;
 		border: 0;
-		box-shadow:
-			2px 2px 1px 0px #fff6 inset,
-			-2px -2px 1px 0px #2226 inset;
+		/* box-shadow: */
+		/* 	2px 2px 1px 0px #fff6 inset, */
+		/* 	-2px -2px 1px 0px #2226 inset; */
 		text-align: center;
 		font-weight: 600;
 		color: #000;
 		transition-property: transform, opacity;
 		transition-duration: .04s, .02s;
-		background-color: #aaa;
+		background-color: #F9F2E9;
 	}
 
 	button:hover {
@@ -244,7 +262,7 @@
 		/* 	-5px 5px 0 #000, */
 		/* 	5px 5px 0 #000; */
 
-		background-color: white;
+		background-color: #F9F2E9;
 		/* border-radius: 100px; */
 	}
 
@@ -261,11 +279,11 @@
 	}
 
 	.file-manager .toolbar {
-		background-color: var(--some);
-		color: white;
-		box-shadow:
-			2px 2px 1px 0px #fff6 inset,
-			-2px -2px 1px 0px #2226 inset;
+		/*background-color: var(--some);*/
+		color: #F9F2E9;
+		/* box-shadow: */
+		/* 	2px 2px 1px 0px #fff6 inset, */
+		/* 	-2px -2px 1px 0px #2226 inset; */
 	}
 
 	.toolbar button {
@@ -281,18 +299,18 @@
 	}
 
 	.file-manager {
-		background-color: #fff;
+		background-color: #F9F2E9;
 		position: fixed;
 		left: 1em;
 		top: 1em;
 		width: 95vw;
 		height: 95vh;
 
-		border: 4.5px solid var(--some);
+		border: 1.5px solid var(--some);
 		box-shadow: 0 0 15px 8px #0001;
 
 		display: grid;
-		grid-template-rows: 3em 92%;
+		grid-template-rows: 3em calc(100% - 3em);
 	}
 
 	.scroll {
@@ -303,10 +321,10 @@
 	.main {
 		/* grid */
 		background-size: 40px 40px;
-		background-color: white;
-		background-image:
-			linear-gradient(to right, #000 1px, transparent 1px),
-			linear-gradient(to bottom, #000 1px, transparent 1px);
+		background-color: #F9F2E9;
+		/* background-image: */
+		/* 	linear-gradient(to right, #000 1px, transparent 1px), */
+		/* 	linear-gradient(to bottom, #000 1px, transparent 1px); */
 	}
 
 	.sidebar {

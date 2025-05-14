@@ -337,8 +337,8 @@ let filemanager = () => {
 	let rectangle = mut({
 		x: Math.random() * 10,
 		y: Math.random() * 10,
-		w: 90,
-		h: 90
+		w: 60,
+		h: 60
 	})
 
 	let style = mem(() => CSS.css({
@@ -457,7 +457,7 @@ eff_on(contents, () => {
 		if (item.type == "file") {
 			setTimeout(() =>
 				WindowManager.add(item.content, item.location.replace(location(), "")),
-				350 * i + 1)
+				150 * i + 1)
 		}
 	})
 })
