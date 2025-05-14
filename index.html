@@ -94,8 +94,8 @@
 		position: fixed;
 		box-shadow: 0 0 15px 8px #2222;
 		display: grid;
-		grid-template-rows: 2.5em auto;
-		background-color: #eee;
+		grid-template-rows: 2.5em calc(100% - 2.5em);
+		background-color: #fff;
 	}
 
 	.window .view-area {}
@@ -263,10 +263,17 @@
 	.file-manager .toolbar {
 		background-color: var(--some);
 		color: white;
-
 		box-shadow:
 			2px 2px 1px 0px #fff6 inset,
 			-2px -2px 1px 0px #2226 inset;
+	}
+
+	.toolbar button {
+		width: 5em;
+	}
+
+	.toolbar>* {
+		margin-right: .5em;
 	}
 
 	.file-manager>* {
@@ -274,14 +281,14 @@
 	}
 
 	.file-manager {
-		background-color: #ddd;
+		background-color: #fff;
 		position: fixed;
 		left: 1em;
 		top: 1em;
 		width: 95vw;
 		height: 95vh;
 
-		border: 1.5px solid var(--some);
+		border: 4.5px solid var(--some);
 		box-shadow: 0 0 15px 8px #0001;
 
 		display: grid;
@@ -296,9 +303,10 @@
 	.main {
 		/* grid */
 		background-size: 40px 40px;
+		background-color: white;
 		background-image:
-			linear-gradient(to right, #2222 1px, transparent 1px),
-			linear-gradient(to bottom, #2222 1px, transparent 1px);
+			linear-gradient(to right, #000 1px, transparent 1px),
+			linear-gradient(to bottom, #000 1px, transparent 1px);
 	}
 
 	.sidebar {

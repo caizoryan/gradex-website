@@ -315,8 +315,15 @@ let goback = () => {
 // --------------------
 
 let togglebtn = (signal, name) => ["button", { onclick: () => signal(!signal()), style: mem(() => signal() ? "" : "opacity: .2;") }, name]
-let grid = sig(false)
-let list = sig(true)
+let grid = sig(true)
+let list = sig(false)
+
+eff_on(grid, () => {
+	if (grid()) {
+		list(false)
+		view("grid")
+	}
+})
 
 eff_on(list, () => {
 	if (list()) {
@@ -325,12 +332,6 @@ eff_on(list, () => {
 	}
 })
 
-eff_on(grid, () => {
-	if (grid()) {
-		list(false)
-		view("grid")
-	}
-})
 
 let filemanager = () => {
 	let rectangle = mut({
@@ -366,7 +367,6 @@ let filemanager = () => {
 
 
 			// auto open
-			togglebtn(autoopen, "Auto Open"),
 			togglebtn(grid, "grid"),
 			togglebtn(list, "list")
 
@@ -377,12 +377,14 @@ let filemanager = () => {
 	])
 }
 
-const random_pos = () => {
+//togglebtn(autoopen, "Auto Open"),
+
+const random_pos = (i) => {
 	return {
-		x: Math.random() * 25 + 25,
-		y: Math.random() * 35,
-		w: Math.random() * 35 + 25,
-		h: 60
+		x: window.innerWidth * (.3 + i / 100),
+		y: window.innerHeight * (.20 + i / 100),
+		w: window.innerWidth * .40,
+		h: window.innerHeight * .60
 	}
 }
 
@@ -399,12 +401,12 @@ const WindowManager = (function() {
 			let found = windows.find(f => (f.file.type == file.type && f.file.content == file.content))
 			if (found) return
 
-			let rectangle = random_pos()
-			if (file.type == "text") rectangle.w = 30
-			if (file.type == "link") rectangle.w = 50
+			let rectangle = random_pos(Math.random() * 20)
+			if (file.type == "text") rectangle.w = window.innerWidth * .30
+			if (file.type == "link") rectangle.w = window.innerWidth * .50
 			if (file.type == "image" && title.includes("headshot")) {
-				rectangle.w = 20
-				rectangle.h = 40
+				rectangle.w = window.innerWidth * .20
+				rectangle.h = window.innerHeight * .40
 			}
 
 			windows.push({
@@ -463,12 +465,13 @@ eff_on(contents, () => {
 /**@param {Window} win */
 function windowdom(win) {
 	let z = sig(0)
+
 	let style = mem(() => CSS.css({
 		position: "fixed",
-		left: CSS.vw(win.rectangle.x),
-		top: CSS.vh(win.rectangle.y),
-		width: CSS.vw(win.rectangle.w),
-		height: CSS.vh(win.rectangle.h),
+		left: CSS.px(win.rectangle.x),
+		top: CSS.px(win.rectangle.y),
+		width: CSS.px(win.rectangle.w),
+		height: CSS.px(win.rectangle.h),
 		"z-index": z()
 	}))
 
@@ -480,8 +483,8 @@ function windowdom(win) {
 				zindex++
 				z(zindex)
 			},
-			set_left: (x) => win.rectangle.x = (x / window.innerWidth) * 100,
-			set_top: (y) => win.rectangle.y = (y / window.innerHeight) * 100
+			set_left: (x) => win.rectangle.x = x,
+			set_top: (y) => win.rectangle.y = y
 		})
 	})
 
