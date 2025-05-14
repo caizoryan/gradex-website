@@ -25,10 +25,6 @@ const between = (val, min, max) => (val > min && val < max)
  * */
 const selected_student = sig(null)
 
-/**
- * @typedef {("list" | "grid")} Views
- * @type chowk.Signal<View>
- * */
 const view = sig("grid")
 const scroll = sig(0)
 const autoopen = sig(true)
@@ -244,6 +240,7 @@ FS.add(Directory("~/about"))
  * @typedef {{
  *	id: number,
  *	rectangle: {x: number, y: number, w: number, h: number},
+ *	animation: boolean,
  *	title: string,
  *	file: FileContent,
  * }} Window
@@ -368,7 +365,8 @@ let filemanager = () => {
 
 			// auto open
 			togglebtn(grid, "grid"),
-			togglebtn(list, "list")
+			togglebtn(list, "list"),
+			togglebtn(autoopen, "autopen")
 
 			// views
 		],
@@ -392,6 +390,33 @@ const WindowManager = (function() {
 	/**@type {Window[]}*/
 	let windows = mut([])
 
+	const shuffle = () => {
+		windows.forEach((w) => {
+			w.rectangle.x = Math.random() * (window.innerWidth - w.rectangle.w)
+			w.rectangle.y = Math.random() * (window.innerHeight - w.rectangle.h)
+		})
+	}
+
+	const horizontal = () => {
+		let xpos = 100
+		windows.forEach((w) => {
+			w.rectangle.x = xpos
+			w.rectangle.y = Math.random() * ((window.innerHeight - w.rectangle.h) / 2) + 150
+			xpos += w.rectangle.w + 25
+		})
+	}
+
+	const shiftx = (num) => {
+		windows.forEach((w) => w.animation = true)
+		setTimeout(() => windows.forEach((w) => w.animation = false), 550)
+		setTimeout(() => windows.forEach((w) => {
+			// if webseit ignore
+			//if (w.file.type == "link") return
+			w.rectangle.x += num
+		}), 50)
+	}
+
+
 	return {
 		/**
 		 * @param {FileContent} file
@@ -412,6 +437,7 @@ const WindowManager = (function() {
 			windows.push({
 				id: Math.random() * 99999,
 				rectangle,
+				animation: false,
 				title,
 				file
 			})
@@ -430,7 +456,18 @@ const WindowManager = (function() {
 				windows.splice(index, 1)
 		},
 
-		render: () => each(() => windows, windowdom)
+		render: () => {
+			return hdom([
+				[".window-toolbox",
+					["button", { onclick: shuffle }, "shuffle"],
+					["button", { onclick: horizontal }, "horizontal"],
+					["button", { onclick: () => shiftx(window.innerWidth / 3) }, "<"],
+					["button", { onclick: () => shiftx(-window.innerWidth / 3) }, ">"],
+				],
+				// a btn thatll arrange them
+				each(() => windows, windowdom)
+			])
+		}
 	}
 })()
 
@@ -450,14 +487,14 @@ eff_on(contents, () => {
 		.windows()
 		.forEach((window, i) => {
 			let found = contents().find((file) => fileeq(file, window.file))
-			if (!found) setTimeout(() => WindowManager.remove(window.id), 100 * i + 1)
+			if (!found) setTimeout(() => WindowManager.remove(window.id), 10 * i + 1)
 		})
 
 	contents().forEach((item, i) => {
 		if (item.type == "file") {
 			setTimeout(() =>
 				WindowManager.add(item.content, item.location.replace(location(), "")),
-				150 * i + 1)
+				15 * i + 1)
 		}
 	})
 })
@@ -465,13 +502,15 @@ eff_on(contents, () => {
 /**@param {Window} win */
 function windowdom(win) {
 	let z = sig(0)
+	let animation = sig(true)
 
 	let style = mem(() => CSS.css({
 		position: "fixed",
-		left: CSS.px(win.rectangle.x),
-		top: CSS.px(win.rectangle.y),
-		width: CSS.px(win.rectangle.w),
-		height: CSS.px(win.rectangle.h),
+		left: win.rectangle.x + "px",
+		top: win.rectangle.y + "px",
+		width: win.rectangle.w + "px",
+		height: win.rectangle.h + "px",
+		transition: animation() ? "all 300ms" : "none",
 		"z-index": z()
 	}))
 
@@ -479,9 +518,13 @@ function windowdom(win) {
 
 	chowk.mounted(() => {
 		drag(ref, {
-			onstart: () => {
+			onstart: (e) => {
 				zindex++
 				z(zindex)
+				animation(false)
+			},
+			onend: (e) => {
+				animation(true)
 			},
 			set_left: (x) => win.rectangle.x = x,
 			set_top: (y) => win.rectangle.y = y
