@@ -494,8 +494,8 @@ let toolbox = () => {
 
 	return hdom(
 		[".window-toolbox", { style: style, ref },
+			["button", { onclick: WindowManager.horizontal }, "organize"],
 			["button", { onclick: WindowManager.shuffle }, "shuffle"],
-			["button", { onclick: WindowManager.horizontal }, "clean"],
 			["button", { onclick: WindowManager.close_all }, "close all"],
 			["button", { onclick: () => WindowManager.shiftx(window.innerWidth / 3) }, "←"],
 			["button", { onclick: () => WindowManager.shiftx(-window.innerWidth / 3) }, "→"],
