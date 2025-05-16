@@ -451,6 +451,60 @@ let communal_gallery = () => {
 	])
 }
 
+let toolbox = () => {
+	let rectangle = mut({
+		x: 5.5,
+		y: 90,
+		w: 40,
+		h: 5
+	})
+
+	let z = sig(2)
+	let animation = sig(true)
+	let style = mem(() => CSS.css({
+		position: "fixed",
+		left: CSS.vw(rectangle.x),
+		top: CSS.vh(rectangle.y),
+		width: CSS.vw(rectangle.w),
+		height: CSS.vh(rectangle.h),
+		transition: animation() ? "all 300ms" : "none",
+		"z-index": z(),
+	}))
+
+	eff_on(WindowManager.open, () => {
+		console.log("running")
+		if (WindowManager.open()) {
+			rectangle.y = 90
+		}
+		else {
+			rectangle.y = 150
+		}
+	})
+
+	let ref = (e) => ref = e
+
+	chowk.mounted(() => {
+		drag(ref, {
+			onstart: () => {
+				animation(false)
+			}, onend: () => { animation(true) },
+
+			set_left: (x) => rectangle.x = (x / window.innerWidth) * 100,
+			set_top: (y) => rectangle.y = (y / window.innerHeight) * 100
+		})
+	})
+
+	return hdom(
+		[".window-toolbox", { style: style, ref },
+			["button", { onclick: WindowManager.shuffle }, "shuffle"],
+			["button", { onclick: WindowManager.horizontal }, "clean"],
+			["button", { onclick: WindowManager.close_all }, "close all"],
+			["button", { onclick: () => WindowManager.shiftx(window.innerWidth / 3) }, "→"],
+			["button", { onclick: () => WindowManager.shiftx(-window.innerWidth / 3) }, "←"],
+		]
+	)
+}
+
 
 //togglebtn(autoopen, "Auto Open"),
 
@@ -466,6 +520,16 @@ const random_pos = (i) => {
 const WindowManager = (function() {
 	/**@type {Window[]}*/
 	let windows = mut([])
+	let open = mem(() => {
+		let count = 0;
+		windows.forEach((e) => {
+			count++
+		})
+
+		if (count == 0) return false
+		return true
+
+	})
 
 	const shuffle = () => {
 		windows.forEach((w) => {
@@ -493,6 +557,14 @@ const WindowManager = (function() {
 		}), 50)
 	}
 
+	const close_all = () => {
+		let link = windows.find((e) => e.file.type == "link")
+		if (link) WindowManager.remove(link.id)
+		windows
+			.forEach((window, i) => {
+				setTimeout(() => WindowManager.remove(window.id), 75 * i + 1)
+			})
+	}
 
 	return {
 		/**
@@ -532,21 +604,12 @@ const WindowManager = (function() {
 			if (index != -1)
 				windows.splice(index, 1)
 		},
+		shuffle, horizontal, shiftx, close_all, open,
 
-		render: () => {
-			return hdom([
-				[".window-toolbox",
-					["button", { onclick: shuffle }, "shuffle"],
-					["button", { onclick: horizontal }, "horizontal"],
-					["button", { onclick: () => shiftx(window.innerWidth / 3) }, "<"],
-					["button", { onclick: () => shiftx(-window.innerWidth / 3) }, ">"],
-				],
-				// a btn thatll arrange them
-				each(() => windows, windowdom)
-			])
-		}
+		render: () => each(() => windows, windowdom)
 	}
 })()
+
 
 eff_on(contents, () => {
 	if (!autoopen()) return
@@ -564,14 +627,14 @@ eff_on(contents, () => {
 		.windows()
 		.forEach((window, i) => {
 			let found = contents().find((file) => fileeq(file, window.file))
-			if (!found) setTimeout(() => WindowManager.remove(window.id), 10 * i + 1)
+			if (!found) setTimeout(() => WindowManager.remove(window.id), 75 * i + 1)
 		})
 
 	contents().forEach((item, i) => {
 		if (item.type == "file") {
 			setTimeout(() =>
 				WindowManager.add(item.content, item.location.replace(location(), "")),
-				15 * i + 1)
+				75 * i + 1)
 		}
 	})
 })
@@ -681,7 +744,9 @@ function location_item(item) {
 // -----------------------
 const Main = () => {
 	return hdom([
-		[".main", filemanager, WindowManager.render, logo, communal_gallery]
+		[".main", filemanager, WindowManager.render, logo, communal_gallery, toolbox
+
+		]
 	])
 }
 
