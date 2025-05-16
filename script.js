@@ -8,7 +8,7 @@ import * as chowk from "./solid/monke.js"
 
 let canvas_dom
 let timeout = undefined
-let zindex = 0
+let zindex = 2
 
 const lerp = (start, stop, amt) => amt * (stop - start) + start
 const invlerp = (x, y, a) => clamp((a - x) / (y - x));
@@ -332,10 +332,10 @@ eff_on(list, () => {
 
 let filemanager = () => {
 	let rectangle = mut({
-		x: Math.random() * 10,
-		y: Math.random() * 10,
+		x: 24.5,
+		y: 6,
 		w: 60,
-		h: 60
+		h: 80
 	})
 
 	let style = mem(() => CSS.css({
@@ -362,18 +362,95 @@ let filemanager = () => {
 			["button.back", { onclick: goback, }, "<"],
 			["button.back", { onclick: goback, }, ">"],
 
-
 			// auto open
 			togglebtn(grid, "grid"),
 			togglebtn(list, "list"),
 			togglebtn(autoopen, "autopen")
-
-			// views
 		],
 
 		[".pane", { view: view }, each(contents, location_item)]
 	])
 }
+
+let logo = () => {
+	let rectangle = mut({
+		x: 4.5,
+		y: 6,
+		w: 18,
+		h: 32
+	})
+
+
+	let z = sig(2)
+	let style = mem(() => CSS.css({
+		position: "fixed",
+		left: CSS.vw(rectangle.x),
+		top: CSS.vh(rectangle.y),
+		width: CSS.vw(rectangle.w),
+		height: CSS.vh(rectangle.h),
+		"z-index": z(),
+	}))
+
+	let ref = (e) => ref = e
+
+	chowk.mounted(() => {
+		drag(ref, {
+			onstart: (e) => {
+				zindex++
+				z(zindex)
+			},
+			set_left: (x) => rectangle.x = (x / window.innerWidth) * 100,
+			set_top: (y) => rectangle.y = (y / window.innerHeight) * 100
+		})
+	})
+
+	return hdom([
+		".file-manager", { ref, style: style },
+		[".toolbar", "./assets/gradex_logo.mp4"],
+		[".view-area.centered",
+			["video.logo", { autoplay: true, muted: true, src: "./assets/logo.mp4" }],
+		]
+	])
+}
+
+let communal_gallery = () => {
+	let rectangle = mut({
+		x: 4.5,
+		y: 42,
+		w: 18,
+		h: 44
+	})
+
+	let z = sig(2)
+	let style = mem(() => CSS.css({
+		position: "fixed",
+		left: CSS.vw(rectangle.x),
+		top: CSS.vh(rectangle.y),
+		width: CSS.vw(rectangle.w),
+		height: CSS.vh(rectangle.h),
+		"z-index": z(),
+	}))
+
+	let ref = (e) => ref = e
+
+	chowk.mounted(() => {
+		drag(ref, {
+			onstart: (e) => {
+				zindex++
+				z(zindex)
+			},
+			set_left: (x) => rectangle.x = (x / window.innerWidth) * 100,
+			set_top: (y) => rectangle.y = (y / window.innerHeight) * 100
+		})
+	})
+
+	return hdom([
+		".file-manager.behind", { ref, style: style },
+		[".toolbar", "./communal_gallery"],
+		[".view-area"]
+	])
+}
+
 
 //togglebtn(autoopen, "Auto Open"),
 
@@ -501,7 +578,7 @@ eff_on(contents, () => {
 
 /**@param {Window} win */
 function windowdom(win) {
-	let z = sig(0)
+	let z = sig(3)
 	let animation = sig(true)
 
 	let style = mem(() => CSS.css({
@@ -604,10 +681,7 @@ function location_item(item) {
 // -----------------------
 const Main = () => {
 	return hdom([
-		[".main",
-			filemanager,
-			WindowManager.render
-		]
+		[".main", filemanager, WindowManager.render, logo, communal_gallery]
 	])
 }
 
