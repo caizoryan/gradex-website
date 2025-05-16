@@ -408,7 +408,7 @@ let logo = () => {
 		".file-manager", { ref, style: style },
 		[".toolbar", "./assets/gradex_logo.mp4"],
 		[".view-area.centered",
-			["video.logo", { autoplay: true, muted: true, src: "./assets/logo.mp4" }],
+			["video.logo", { loop: true, autoplay: true, muted: true, src: "./assets/logo.mp4" }],
 		]
 	])
 }
@@ -459,16 +459,14 @@ let toolbox = () => {
 		h: 5
 	})
 
-	let z = sig(2)
 	let animation = sig(true)
 	let style = mem(() => CSS.css({
 		position: "fixed",
 		left: CSS.vw(rectangle.x),
 		top: CSS.vh(rectangle.y),
-		width: CSS.vw(rectangle.w),
-		height: CSS.vh(rectangle.h),
+		// width: CSS.vw(rectangle.w),
+		// height: CSS.vh(rectangle.h),
 		transition: animation() ? "all 300ms" : "none",
-		"z-index": z(),
 	}))
 
 	eff_on(WindowManager.open, () => {
@@ -499,8 +497,8 @@ let toolbox = () => {
 			["button", { onclick: WindowManager.shuffle }, "shuffle"],
 			["button", { onclick: WindowManager.horizontal }, "clean"],
 			["button", { onclick: WindowManager.close_all }, "close all"],
-			["button", { onclick: () => WindowManager.shiftx(window.innerWidth / 3) }, "→"],
-			["button", { onclick: () => WindowManager.shiftx(-window.innerWidth / 3) }, "←"],
+			["button", { onclick: () => WindowManager.shiftx(window.innerWidth / 3) }, "←"],
+			["button", { onclick: () => WindowManager.shiftx(-window.innerWidth / 3) }, "→"],
 		]
 	)
 }
@@ -641,8 +639,38 @@ eff_on(contents, () => {
 
 /**@param {Window} win */
 function windowdom(win) {
-	let z = sig(3)
+	let z = sig(++zindex)
 	let animation = sig(true)
+	let old = {
+		x: win.rectangle.x,
+		y: win.rectangle.y,
+		w: win.rectangle.w,
+		h: win.rectangle.h
+	}
+	let full = sig(false)
+
+	eff_on(full, () => {
+		if (full()) {
+			old = {
+				x: win.rectangle.x,
+				y: win.rectangle.y,
+				w: win.rectangle.w,
+				h: win.rectangle.h
+			}
+
+			win.rectangle.x = 10
+			win.rectangle.y = 10
+			win.rectangle.w = window.innerWidth - 30
+			win.rectangle.h = window.innerHeight - 30
+		}
+
+		else {
+			win.rectangle.x = old.x
+			win.rectangle.y = old.y
+			win.rectangle.w = old.w
+			win.rectangle.h = old.h
+		}
+	})
 
 	let style = mem(() => CSS.css({
 		position: "fixed",
@@ -700,7 +728,8 @@ function windowdom(win) {
 			{ style, ref },
 			[".bar",
 				["button.close", { onclick: () => WindowManager.remove(win.id) }, "x"],
-				["h4.title", win.title]
+				["button.maximize", { onclick: () => full(!full()) }, mem(() => full() ? "⇲" : "⇔")],
+				["h4.title", win.title],
 			],
 
 			viewer(win.file)
