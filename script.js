@@ -379,7 +379,7 @@ let filemanager = () => {
 			onstart: (e) => {
 				zindex++
 				z(zindex)
-				LOG.add_log("mouse_down", "📁 File Manager")
+				LOG.add_log("[EVENT] mouse_down", "📁 File Manager")
 			},
 			set_left: (x) => rectangle.x = (x / window.innerWidth) * 100,
 			set_top: (y) => rectangle.y = (y / window.innerHeight) * 100
@@ -443,7 +443,7 @@ let logo = () => {
 			onstart: (e) => {
 				zindex++
 				z(zindex)
-				LOG.add_log("mouse_down", "Logo")
+				LOG.add_log("[EVENT] mouse_down", "Logo")
 			},
 			set_left: (x) => rectangle.x = (x / window.innerWidth) * 100,
 			set_top: (y) => rectangle.y = (y / window.innerHeight) * 100
@@ -497,7 +497,7 @@ let communal_gallery = () => {
 			onstart: (e) => {
 				zindex++
 				z(zindex)
-				LOG.add_log("mouse_down", "<3 Communal Gallery")
+				LOG.add_log("[EVENT] mouse_down", "<3 Communal Gallery")
 			},
 			set_left: (x) => rectangle.x = (x / window.innerWidth) * 100,
 			set_top: (y) => rectangle.y = (y / window.innerHeight) * 100
@@ -574,7 +574,7 @@ let activitylog = () => {
 			onstart: (e) => {
 				zindex++
 				z(zindex)
-				LOG.add_log("mouse_down", "LOG")
+				LOG.add_log("[EVENT] mouse_down", "LOG")
 			},
 			set_left: (x) => rectangle.x = (x / window.innerWidth) * 100,
 			set_top: (y) => rectangle.y = (y / window.innerHeight) * 100
@@ -586,7 +586,7 @@ let activitylog = () => {
 		[".toolbar", "LOG"],
 		[".logger-area.scroll",
 			each(() => LOG.logs,
-				(el) => hdom(["p", ["span.type", el.type], "::", ["span.subtitle", el.subtitle]]))
+				(el) => hdom(["p", ["span.type", el.type], ["span.subtitle", " > ", el.subtitle]]))
 		]
 	])
 }
@@ -670,7 +670,7 @@ const WindowManager = (function() {
 	})
 
 	const shuffle = () => {
-		LOG.add_log("Organize", "Shuffle")
+		LOG.add_log("[CMD] Organize", "Shuffle")
 		windows.forEach((w) => {
 			w.rectangle.x = Math.random() * (window.innerWidth - w.rectangle.w)
 			w.rectangle.y = Math.random() * (window.innerHeight - w.rectangle.h)
@@ -678,7 +678,7 @@ const WindowManager = (function() {
 	}
 
 	const horizontal = () => {
-		LOG.add_log("Organize", "Horizontally")
+		LOG.add_log("[CMD] Organize", "Horizontally")
 		let xpos = 100
 		windows.forEach((w) => {
 			w.rectangle.x = xpos
@@ -688,7 +688,7 @@ const WindowManager = (function() {
 	}
 
 	const shiftx = (num) => {
-		LOG.add_log("Shift", "by :: " + num)
+		LOG.add_log("[CMD] Shift", "by :: " + num)
 		windows.forEach((w) => w.animation = true)
 		setTimeout(() => windows.forEach((w) => w.animation = false), 550)
 		setTimeout(() => windows.forEach((w) => {
@@ -699,7 +699,7 @@ const WindowManager = (function() {
 	}
 
 	const close_all = () => {
-		LOG.add_log("Close", "All Windows")
+		LOG.add_log("[CMD] Close", "All Windows")
 		let link = windows.find((e) => e.file.type == "link")
 		if (link) WindowManager.remove(link.id)
 		windows
@@ -728,7 +728,7 @@ const WindowManager = (function() {
 			rectangle.x = Math.random() * (window.innerWidth - rectangle.w)
 			rectangle.y = Math.random() * (window.innerHeight - rectangle.h)
 
-			LOG.add_log("Open", "Window :: " + title)
+			LOG.add_log("[CMD] Open", "Window :: " + title)
 			windows.push({
 				id: Math.random() * 99999,
 				rectangle,
@@ -747,7 +747,7 @@ const WindowManager = (function() {
 		},
 		remove: (id) => {
 			let index = windows.findIndex(e => e.id == id)
-			LOG.add_log("Closed", ":: Window :: " + windows[index].title)
+			LOG.add_log("[CMD] Close", " Window :: " + windows[index].title)
 			if (index != -1)
 				windows.splice(index, 1)
 		},
@@ -839,10 +839,11 @@ function windowdom(win) {
 				zindex++
 				z(zindex)
 				animation(false)
-				LOG.add_log("mouse_down", win.title)
+				LOG.add_log("[Event] mouse_down", win.title)
 			},
 			onend: (e) => {
 				animation(true)
+				LOG.add_log("[Event] mouse_up", win.title)
 			},
 			set_left: (x) => win.rectangle.x = x,
 			set_top: (y) => win.rectangle.y = y
