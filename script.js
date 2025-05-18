@@ -5,6 +5,7 @@ import CSS from "./css/css.js"
 
 import * as ArenaType from "./arena.js"
 import * as chowk from "./solid/monke.js"
+import { communaldata, datadata, newdata } from "./data.js"
 
 let canvas_dom
 let timeout = undefined
@@ -59,25 +60,31 @@ const channels = mut([])
 let formsdata
 let communal = mut([])
 
-fetch("./newdata.json")
-	.then((res) => res.json())
-	.then(res => formsdata = res)
-	.then(() => {
+setTimeout(() => {
+	formsdata = newdata
+	communaldata.contents.forEach((r) => { communal.push(r); console.log(r) })
+	datadata.forEach((r) => channels.push(r))
+	init_students(channels)
+}, 10)
 
-		fetch("./communal.json")
-			.then((res) => res.json())
-			.then(res => {
-				console.log(res)
-				res.contents.forEach((r) => { communal.push(r); console.log(r) }
-				)
-			})
-
-		fetch("./data.json")
-			.then((res) => res.json())
-			.then(res => res.forEach((r) => channels.push(r)))
-			.then(_ => init_students(channels))
-	})
-
+// fetch("./newdata.json")
+// 	.then((res) => res.json())
+// 	.then(res => formsdata = res)
+// 	.then(() => {
+//
+// 		fetch("./communal.json")
+// 			.then((res) => res.json())
+// 			.then(res => {
+// 				console.log(res)
+// 				res.contents
+// 			})
+//
+// 		fetch("./data.json")
+// 			.then((res) => res.json())
+// 			.then(res => res)
+// 			.then(_ => init_students(channels))
+// 	})
+//
 
 /**
  *
@@ -362,6 +369,11 @@ let filemanager = () => {
 
 	let z = sig(0)
 	let animation = sig(false)
+
+	let style_mini = mem(() => CSS.css({
+		left: CSS.vw(rectangle.x),
+		top: CSS.vh(rectangle.y),
+	}))
 	let style = mem(() => CSS.css({
 		position: "fixed",
 		left: CSS.vw(rectangle.x),
@@ -398,7 +410,7 @@ let filemanager = () => {
 	}
 
 	return hdom([
-		".file-manager.main-dawg", { ref, style: style },
+		".file-manager.main-dawg", { style: style, ref },
 		[".bar",
 			["button.close", { onclick: close }, "x"],
 			["h4.title", "File Manager"],
@@ -893,6 +905,7 @@ function windowdom(win) {
 /**@param {Content} item */
 function location_item(item) {
 	let click = () => {
+		console.log("wtf?")
 		let content = FS.read(item.location)
 		if (!Array.isArray(content)) {
 			WindowManager.add(content, item.location.replace(location(), ""))

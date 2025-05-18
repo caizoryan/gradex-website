@@ -7,6 +7,7 @@ export const drag = (elem, options = {}) => {
 	const set_top = options.set_top ? options.set_top : (top) => { elem.style.top = top + "px"; };
 	const onstart = options.onstart ? options.onstart : () => null;
 	const onend = options.onend ? options.onend : () => null;
+	const targetref = options.targetref
 
 	// For panning (translate)
 	let lastPosX, lastPosY;					// Needed because of decimals 
@@ -58,15 +59,18 @@ export const drag = (elem, options = {}) => {
 	}
 
 
-
-
 	function handle_pointerdown(e) {
 		let target = check_target(e.target, e.currentTarget);
+		console.log("down", e, "target", target, "e.target", e.target)
 		if (!target) return;
 		let pann = typeof pan_switch === 'function' ? pan_switch() : pan_switch;
 		if (!pann) return;
-		e.preventDefault();
-		e.stopPropagation();
+		// this is so hacky, fuck google chrome
+		if (target != e.target) {
+			e.target.click()
+		}
+
+		e.preventDefault(); e.stopPropagation();
 
 		onstart(target)
 		target.style.cursor = 'none'
