@@ -57,11 +57,21 @@ const seek = (value) => {
 /**@type {Array<ArenaType.Channel>}*/
 const channels = mut([])
 let formsdata
+let communal = mut([])
 
 fetch("./newdata.json")
 	.then((res) => res.json())
 	.then(res => formsdata = res)
 	.then(() => {
+
+		fetch("./communal.json")
+			.then((res) => res.json())
+			.then(res => {
+				console.log(res)
+				res.contents.forEach((r) => { communal.push(r); console.log(r) }
+				)
+			})
+
 		fetch("./data.json")
 			.then((res) => res.json())
 			.then(res => res.forEach((r) => channels.push(r)))
@@ -85,6 +95,7 @@ function text(content) {
 
 /**@param {ArenaType.Channel[]} channels */
 function init_students(channels) {
+	console.log("channels", channels)
 	channels.reduce(
 		(students, channel) => {
 			// each channel is a student
@@ -131,8 +142,6 @@ function init_students(channels) {
 		FS.add(File("~/students/" + student.preferred_name + "/work_description.txt", { type: "text", content: student.project_description }))
 		if (student.website !== "") FS.add(File("~/students/" + student.preferred_name + "/website.webloc", { type: "link", content: student.website }))
 	})
-
-	console.log("stuAdents", students)
 
 	location("~/students")
 }
@@ -275,9 +284,6 @@ let location = sig("~/")
 
 setTimeout(() => eff_on(location, () => {
 	LOG.add_log("Accessed:", location())
-	setTimeout(() => {
-		document.querySelector(".logger-area")?.scrollTo(0, 99999);
-	}, 10)
 }), 10)
 
 /**@type {() => Content[]}*/
@@ -449,8 +455,8 @@ let communal_gallery = () => {
 	let rectangle = mut({
 		x: 4.5,
 		y: 42,
-		w: 18,
-		h: 44
+		w: 22,
+		h: 52
 	})
 
 	let z = sig(2)
@@ -476,10 +482,32 @@ let communal_gallery = () => {
 		})
 	})
 
+	const communalimages = mem(() => communal
+		.reduce((acc, block) => {
+			if (block.class == "Image") acc.push(block)
+			return acc
+		}, [])
+	)
+
 	return hdom([
 		".file-manager.behind", { ref, style: style },
 		[".toolbar", "./communal_gallery"],
-		[".view-area"]
+		[".feed-area.scroll",
+			each(communalimages, (b) => hdom(
+				[".view-box",
+					["img", {
+						onclick: () => {
+							WindowManager.add({
+								type: "image",
+								content: b.image.display.url
+							}, b.title)
+
+						},
+						src: b.image.display.url
+					}]
+				]
+			))
+		]
 	])
 }
 
@@ -489,6 +517,9 @@ let LOG = (function() {
 	return {
 		add_log: (type, subtitle) => {
 			logs.push({ type, subtitle, time: new Date() })
+			setTimeout(() => {
+				document.querySelector(".logger-area")?.scrollTo(0, 99999);
+			}, 10)
 		},
 		logs,
 	}
@@ -529,7 +560,8 @@ let activitylog = () => {
 		".file-manager", { ref, style: style },
 		[".toolbar", "LOG"],
 		[".logger-area.scroll",
-			each(() => LOG.logs, (el) => hdom(["p", el.type, el.subtitle]))
+			each(() => LOG.logs,
+				(el) => hdom(["p", ["span.type", el.type], "::", ["span.subtitle", el.subtitle]]))
 		]
 	])
 }
@@ -613,6 +645,7 @@ const WindowManager = (function() {
 	})
 
 	const shuffle = () => {
+		LOG.add_log("Organize", "Shuffle")
 		windows.forEach((w) => {
 			w.rectangle.x = Math.random() * (window.innerWidth - w.rectangle.w)
 			w.rectangle.y = Math.random() * (window.innerHeight - w.rectangle.h)
@@ -620,6 +653,7 @@ const WindowManager = (function() {
 	}
 
 	const horizontal = () => {
+		LOG.add_log("Organize", "Horizontally")
 		let xpos = 100
 		windows.forEach((w) => {
 			w.rectangle.x = xpos
@@ -629,6 +663,7 @@ const WindowManager = (function() {
 	}
 
 	const shiftx = (num) => {
+		LOG.add_log("Shift", "by :: " + num)
 		windows.forEach((w) => w.animation = true)
 		setTimeout(() => windows.forEach((w) => w.animation = false), 550)
 		setTimeout(() => windows.forEach((w) => {
@@ -639,6 +674,7 @@ const WindowManager = (function() {
 	}
 
 	const close_all = () => {
+		LOG.add_log("Close", "All Windows")
 		let link = windows.find((e) => e.file.type == "link")
 		if (link) WindowManager.remove(link.id)
 		windows
@@ -667,6 +703,7 @@ const WindowManager = (function() {
 			rectangle.x = Math.random() * (window.innerWidth - rectangle.w)
 			rectangle.y = Math.random() * (window.innerHeight - rectangle.h)
 
+			LOG.add_log("Open", "Window :: " + title)
 			windows.push({
 				id: Math.random() * 99999,
 				rectangle,
@@ -685,6 +722,7 @@ const WindowManager = (function() {
 		},
 		remove: (id) => {
 			let index = windows.findIndex(e => e.id == id)
+			LOG.add_log("Closed", ":: Window :: " + windows[index].title)
 			if (index != -1)
 				windows.splice(index, 1)
 		},
