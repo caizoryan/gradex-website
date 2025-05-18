@@ -197,7 +197,11 @@
 		margin-left: 1em;
 	}
 
-	.file-manager.main-dawg .bar {
+	.border {
+		border: 1px solid #3332;
+	}
+
+	.file-manager .bar {
 		display: flex;
 		cursor: pointer;
 		font-size: 1em;
@@ -257,12 +261,14 @@
 	}
 
 	span.type {
+		opacity: .5;
 		font-size: .8em;
 		font-family: monospace;
 		font-weight: 600;
 	}
 
 	span.subtitle {
+		opacity: .5;
 		font-family: monospace;
 		font-size: .8em;
 	}
@@ -292,6 +298,7 @@
 		font-weight: 600;
 		color: #000;
 		transition-property: transform, opacity;
+		border: 1px solid #3332;
 		transition-duration: .04s, .02s;
 		background-color: #F9F2E9;
 	}

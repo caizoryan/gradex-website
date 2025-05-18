@@ -335,12 +335,19 @@ eff_on(grid, () => {
 		list(false)
 		view("grid")
 	}
+	else {
+		if (!list()) grid(true)
+	}
 })
 
 eff_on(list, () => {
 	if (list()) {
 		grid(false)
 		view("list")
+	}
+
+	else {
+		if (!grid()) list(true)
 	}
 })
 
@@ -372,6 +379,7 @@ let filemanager = () => {
 			onstart: (e) => {
 				zindex++
 				z(zindex)
+				LOG.add_log("mouse_down", "📁 File Manager")
 			},
 			set_left: (x) => rectangle.x = (x / window.innerWidth) * 100,
 			set_top: (y) => rectangle.y = (y / window.innerHeight) * 100
@@ -397,8 +405,7 @@ let filemanager = () => {
 		],
 		[".toolbar",
 			// front back
-			["button.back", { onclick: goback, }, "<"],
-			["button.back", { onclick: goback, }, ">"],
+			["button.back.border", { onclick: goback, }, "←"],
 
 			// auto open
 			togglebtn(grid, "grid"),
@@ -436,6 +443,7 @@ let logo = () => {
 			onstart: (e) => {
 				zindex++
 				z(zindex)
+				LOG.add_log("mouse_down", "Logo")
 			},
 			set_left: (x) => rectangle.x = (x / window.innerWidth) * 100,
 			set_top: (y) => rectangle.y = (y / window.innerHeight) * 100
@@ -458,6 +466,7 @@ let communal_gallery = () => {
 		w: 22,
 		h: 52
 	})
+	let animation = sig(false)
 
 	let z = sig(2)
 	let style = mem(() => CSS.css({
@@ -466,8 +475,20 @@ let communal_gallery = () => {
 		top: CSS.vh(rectangle.y),
 		width: CSS.vw(rectangle.w),
 		height: CSS.vh(rectangle.h),
+		transition: animation() ? "all 300ms" : "none",
 		"z-index": z(),
 	}))
+
+	const close = () => {
+		rectangle.y = Math.random() > .5 ? -100 : 100
+		rectangle.x = Math.random() > .5 ? -100 : 100
+		setTimeout(() => {
+			animation(true)
+			rectangle.y = Math.random() * 40
+			rectangle.x = Math.random() * 40
+			setTimeout(() => { animation(false) }, 300)
+		}, 500)
+	}
 
 	let ref = (e) => ref = e
 
@@ -476,6 +497,7 @@ let communal_gallery = () => {
 			onstart: (e) => {
 				zindex++
 				z(zindex)
+				LOG.add_log("mouse_down", "<3 Communal Gallery")
 			},
 			set_left: (x) => rectangle.x = (x / window.innerWidth) * 100,
 			set_top: (y) => rectangle.y = (y / window.innerHeight) * 100
@@ -491,7 +513,9 @@ let communal_gallery = () => {
 
 	return hdom([
 		".file-manager.behind", { ref, style: style },
-		[".toolbar", "./communal_gallery"],
+		[".bar",
+			["button.close", { onclick: close }, "x"],
+			["h4.title", "./communal_gallery"]],
 		[".feed-area.scroll",
 			each(communalimages, (b) => hdom(
 				[".view-box",
@@ -529,7 +553,7 @@ let activitylog = () => {
 	let rectangle = mut({
 		x: 80.5,
 		y: 72,
-		w: 18,
+		w: 28,
 		h: 24
 	})
 
@@ -550,6 +574,7 @@ let activitylog = () => {
 			onstart: (e) => {
 				zindex++
 				z(zindex)
+				LOG.add_log("mouse_down", "LOG")
 			},
 			set_left: (x) => rectangle.x = (x / window.innerWidth) * 100,
 			set_top: (y) => rectangle.y = (y / window.innerHeight) * 100
@@ -814,6 +839,7 @@ function windowdom(win) {
 				zindex++
 				z(zindex)
 				animation(false)
+				LOG.add_log("mouse_down", win.title)
 			},
 			onend: (e) => {
 				animation(true)
