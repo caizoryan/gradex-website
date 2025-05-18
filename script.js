@@ -58,7 +58,7 @@ const seek = (value) => {
 const channels = mut([])
 let formsdata
 
-fetch("./formsdata.json")
+fetch("./newdata.json")
 	.then((res) => res.json())
 	.then(res => formsdata = res)
 	.then(() => {
@@ -131,6 +131,8 @@ function init_students(channels) {
 		FS.add(File("~/students/" + student.preferred_name + "/work_description.txt", { type: "text", content: student.project_description }))
 		if (student.website !== "") FS.add(File("~/students/" + student.preferred_name + "/website.webloc", { type: "link", content: student.website }))
 	})
+
+	console.log("stuAdents", students)
 
 	location("~/students")
 }
@@ -271,6 +273,13 @@ function File(location, content) {
 
 let location = sig("~/")
 
+setTimeout(() => eff_on(location, () => {
+	LOG.add_log("Accessed:", location())
+	setTimeout(() => {
+		document.querySelector(".logger-area")?.scrollTo(0, 99999);
+	}, 10)
+}), 10)
+
 /**@type {() => Content[]}*/
 let contents = mem(() => {
 	let content = FS.read(location())
@@ -338,25 +347,48 @@ let filemanager = () => {
 		h: 80
 	})
 
+	let z = sig(0)
+	let animation = sig(false)
 	let style = mem(() => CSS.css({
 		position: "fixed",
 		left: CSS.vw(rectangle.x),
 		top: CSS.vh(rectangle.y),
 		width: CSS.vw(rectangle.w),
 		height: CSS.vh(rectangle.h),
+		"z-index": z(),
+		transition: animation() ? "all 300ms" : "none",
 	}))
 
 	let ref = (e) => ref = e
 
 	chowk.mounted(() => {
 		drag(ref, {
+			onstart: (e) => {
+				zindex++
+				z(zindex)
+			},
 			set_left: (x) => rectangle.x = (x / window.innerWidth) * 100,
 			set_top: (y) => rectangle.y = (y / window.innerHeight) * 100
 		})
 	})
 
+	const close = () => {
+		rectangle.y = Math.random() > .5 ? -100 : 100
+		rectangle.x = Math.random() > .5 ? -100 : 100
+		setTimeout(() => {
+			animation(true)
+			rectangle.y = Math.random() * 40
+			rectangle.x = Math.random() * 40
+			setTimeout(() => { animation(false) }, 300)
+		}, 500)
+	}
+
 	return hdom([
-		".file-manager", { ref, style: style },
+		".file-manager.main-dawg", { ref, style: style },
+		[".bar",
+			["button.close", { onclick: close }, "x"],
+			["h4.title", "File Manager"],
+		],
 		[".toolbar",
 			// front back
 			["button.back", { onclick: goback, }, "<"],
@@ -365,7 +397,7 @@ let filemanager = () => {
 			// auto open
 			togglebtn(grid, "grid"),
 			togglebtn(list, "list"),
-			togglebtn(autoopen, "autopen")
+			//togglebtn(autoopen, "autopen")
 		],
 
 		[".pane", { view: view }, each(contents, location_item)]
@@ -448,6 +480,57 @@ let communal_gallery = () => {
 		".file-manager.behind", { ref, style: style },
 		[".toolbar", "./communal_gallery"],
 		[".view-area"]
+	])
+}
+
+let LOG = (function() {
+	let logs = mut([])
+
+	return {
+		add_log: (type, subtitle) => {
+			logs.push({ type, subtitle, time: new Date() })
+		},
+		logs,
+	}
+})()
+
+let activitylog = () => {
+	let rectangle = mut({
+		x: 80.5,
+		y: 72,
+		w: 18,
+		h: 24
+	})
+
+	let z = sig(0)
+	let style = mem(() => CSS.css({
+		position: "fixed",
+		left: CSS.vw(rectangle.x),
+		top: CSS.vh(rectangle.y),
+		width: CSS.vw(rectangle.w),
+		height: CSS.vh(rectangle.h),
+		"z-index": z(),
+	}))
+
+	let ref = (e) => ref = e
+
+	chowk.mounted(() => {
+		drag(ref, {
+			onstart: (e) => {
+				zindex++
+				z(zindex)
+			},
+			set_left: (x) => rectangle.x = (x / window.innerWidth) * 100,
+			set_top: (y) => rectangle.y = (y / window.innerHeight) * 100
+		})
+	})
+
+	return hdom([
+		".file-manager", { ref, style: style },
+		[".toolbar", "LOG"],
+		[".logger-area.scroll",
+			each(() => LOG.logs, (el) => hdom(["p", el.type, el.subtitle]))
+		]
 	])
 }
 
@@ -581,6 +664,9 @@ const WindowManager = (function() {
 				rectangle.h = window.innerHeight * .40
 			}
 
+			rectangle.x = Math.random() * (window.innerWidth - rectangle.w)
+			rectangle.y = Math.random() * (window.innerHeight - rectangle.h)
+
 			windows.push({
 				id: Math.random() * 99999,
 				rectangle,
@@ -625,14 +711,14 @@ eff_on(contents, () => {
 		.windows()
 		.forEach((window, i) => {
 			let found = contents().find((file) => fileeq(file, window.file))
-			if (!found) setTimeout(() => WindowManager.remove(window.id), 75 * i + 1)
+			if (!found) setTimeout(() => WindowManager.remove(window.id), 105 * i + 1)
 		})
 
 	contents().forEach((item, i) => {
 		if (item.type == "file") {
 			setTimeout(() =>
 				WindowManager.add(item.content, item.location.replace(location(), "")),
-				75 * i + 1)
+				105 * i + 1)
 		}
 	})
 })
@@ -768,13 +854,15 @@ function location_item(item) {
 	])
 }
 
+
+
 // -----------------------
 // COMPONENT: Main
 // -----------------------
 const Main = () => {
 	return hdom([
-		[".main", filemanager, WindowManager.render, logo, communal_gallery, toolbox
-
+		[".main", activitylog, filemanager, WindowManager.render, logo, communal_gallery, toolbox, ,
+			[".constraint", "Hey! Sorry this website was not built for this screen size, if possible try to view it on a bigger screen."]
 		]
 	])
 }

@@ -57,6 +57,7 @@
 		font-weight: 100;
 		scrollbar-color: #222 #F9F2E9 !important;
 		scrollbar-width: thin;
+		box-sizing: border-box;
 	}
 
 	.top-left {
@@ -64,6 +65,7 @@
 		left: .5em;
 		top: .5em;
 	}
+
 
 	.window-container {}
 
@@ -77,6 +79,31 @@
 		display: inline-block;
 		width: 300px;
 		margin-bottom: 1em;
+	}
+
+	.logger-area {
+		padding-bottom: 4.5em !important;
+	}
+
+	.constraint {
+		width: 100vw;
+		height: 100vh;
+		position: fixed;
+		top: 0;
+		left: 0;
+		background-color: #F9F2E9;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 25%;
+		z-index: 999999;
+		display: none;
+	}
+
+	@media (max-width:701px) {
+		.constraint {
+			display: flex;
+		}
 	}
 
 	.pane .location p {
@@ -165,6 +192,12 @@
 		margin-left: 1em;
 	}
 
+	.file-manager.main-dawg .bar {
+		display: flex;
+		cursor: pointer;
+		font-size: 1em;
+	}
+
 	.window .bar {
 		display: flex;
 		cursor: pointer;
@@ -187,7 +220,7 @@
 		height: 100%;
 	}
 
-	.bar .title {
+	.window .bar .title {
 		font-size: .7rem;
 		padding: .3rem;
 		background-color: #f9f2e9;
@@ -195,7 +228,7 @@
 		text-overflow: ellipsis;
 	}
 
-	.window .bar>* {
+	.bar>* {
 		margin: .5rem;
 	}
 
@@ -311,7 +344,11 @@
 		padding-bottom: .25em;
 	}
 
-	.file-manager .toolbar {}
+	.file-manager .toolbar,
+	.bar {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
 
 	.toolbar button {
 		width: 5em;
@@ -328,16 +365,16 @@
 	.file-manager {
 		background-color: #F9F2E9;
 		position: fixed;
-		left: 1em;
-		top: 1em;
-		width: 95vw;
-		height: 95vh;
-
 		border: 1.5px solid var(--some);
 		box-shadow: 0 0 15px 8px #0001;
 
 		display: grid;
 		grid-template-rows: 3em calc(100% - 3em);
+	}
+
+	.file-manager.main-dawg {
+		grid-template-rows: 3em 3em calc(100% - 6em);
+		background-color: #F9F2E9;
 	}
 
 	.scroll {
