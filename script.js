@@ -340,7 +340,7 @@ setInterval(() => {
 	// check if has been more than 3 secs
 	let now = new Date()
 	let time_since = now.getTime() - last_update.getTime()
-	if (time_since > 1000) {
+	if (time_since > 8000) {
 		let el = document.createElement("div")
 		let pre = document.createElement("pre")
 		pre.innerHTML = ascii_options[Math.floor(Math.random() * ascii_options.length)]
