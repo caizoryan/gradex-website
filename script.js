@@ -259,6 +259,104 @@ FS.add(Directory("~/students"))
 FS.add(Directory("~/images"))
 FS.add(Directory("~/about"))
 
+let monstera = `
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣠⣤⣤⣤⣀⡀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣾⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⣠⣶⣿⣿⣿⣿⣷⣦⠀⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⠀⠀⠀⠀
+⠀⠀⠀⢠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣇⠀⢿⣿⣿⡿⠛⠋⠉⠉⠉⠉⠉⠁⠀⠀⠀
+⠀⠀⢠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣴⣾⣿⣿⣶⣶⣿⣿⣿⣿⣶⣶⣶⡄⠀⠀
+⠀⠀⣼⣿⡿⠛⠋⠉⣀⣨⣽⣿⣿⣿⣿⣿⣿⣿⣟⡛⠛⠛⠛⠿⢿⣿⣿⡇⠀⠀
+⠀⠀⠹⠁⠀⣠⣶⣿⣿⣿⠟⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣦⣄⡀⠈⠙⠃⠀⠀
+⠀⠀⠀⢠⣿⣿⣿⣿⠋⠁⣠⣾⣿⣿⣿⣿⣿⣿⣿⠻⠿⣿⣿⣿⣿⣶⣄⠀⠀⠀
+⠀⠀⠀⢹⣿⣿⡟⠁⢀⣼⣿⣿⡟⠁⣼⣿⣿⣿⣿⣷⣤⡀⠉⠛⢿⣿⣿⡇⠀⠀
+⠀⠀⠀⠀⢻⡟⠀⢠⣾⣿⣿⡟⠀⣼⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⡀⠈⠛⠇⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⣾⣿⣿⣿⠀⢰⣿⣿⣿⠟⢿⣿⣿⣿⣿⣿⣿⣿⣦⡀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠻⣿⣿⡏⠀⣿⣿⣿⣿⠀⣿⣿⣿⣿⡏⠛⢿⣿⣿⠇⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⠇⢠⣿⣿⣿⣯⠀⢻⣿⣿⣿⣿⣷⡀⠙⠟⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⢿⣿⣿⠀⠈⣿⣿⣿⣿⣿⡿⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠁⠀⠘⠛⠋⠉⠁⠀⠀⠀⠀⠀⠀⠀
+`
+
+let ascii = ``
+let teacher = `
+          .....
+     .'" _  o    "'.
+   .' O (_)     () o'.
+  .           O       .
+ . ()   o__...__    O  .
+. _.--"""       """--._ .
+:"                     ";
+ '-.__    :   :    __.-'
+      """-:   :-"""
+         J     L
+         :     :
+        J       L
+        :       :
+        '._____.'
+`
+
+let fishy = `
+/'·.¸
+     /¸...¸':·
+ ¸.·´  ¸   '·.¸.·´)
+: © ):´;      ¸  {
+ '·.¸ '·  ¸.·´\'·¸)
+     '\\´´\
+`
+
+let bong = `
+		.===. (
+    |   |  )
+    |   | (
+    |   | )
+    |   \*/
+  ,'    //.
+ :~~~~~//~~;      
+  '.  // .'
+   -------'
+`
+
+let printer = `
+  ,----,------------------------------,------.
+  | ## |                              |    - |
+  | ## |                              |    - |
+  |    |------------------------------|    - |
+  |    ||............................||      |
+  |    ||,-                        -.||      |
+  |    ||___                      ___||    ##|
+  |    ||------------------------'---||      |
+   ----''|_|______________________==__| ------'
+`
+
+let ascii_options = [teacher, monstera, fishy, bong, printer, ascii]
+
+let last_update = new Date()
+window.onmousemove = () => {
+	last_update = new Date()
+	document.querySelector(".spawn-div").innerHTML = ""
+}
+
+setInterval(() => {
+	// check if has been more than 3 secs
+	let now = new Date()
+	let time_since = now.getTime() - last_update.getTime()
+	if (time_since > 1000) {
+		let el = document.createElement("div")
+		let pre = document.createElement("pre")
+		pre.innerHTML = ascii_options[Math.floor(Math.random() * ascii_options.length)]
+		el.appendChild(pre)
+		el.style.position = "absolute"
+		el.style.left = Math.random() * window.innerWidth + "px"
+		el.style.top = Math.random() * window.innerHeight + "px"
+		el.style.color = `rgb(199, ${Math.random() * 50 + 150}, 104)`
+		el.style.transform = `rotate(${Math.random() * 20 - 10}deg)`
+
+		document.querySelector(".spawn-div").appendChild(el)
+	}
+}, 1500)
+
+
+
 /**
  * @typedef {("image" | "link" | "text" | "video")} FileType
  * @typedef {{type: FileType, content: any}} FileContent
@@ -950,6 +1048,7 @@ function windowdom(win) {
 		}
 	}
 
+
 	return hdom(
 		[".window",
 			{ style, ref },
@@ -957,7 +1056,7 @@ function windowdom(win) {
 				["button.close", { onclick: () => WindowManager.remove(win.id) }, "x"],
 				["button.maximize", { onclick: () => full(!full()) }, mem(() => full() ? "⇲" : "⇔")],
 				["h4.title", win.title],
-				win.file.type == "link" ? ["a.link", { href: win.file.content, style: "margin-left: auto" }, "LINK ↱"] : null,
+				win.file.type == "link" ? ["a.link", { href: win.file.content, style: "margin-left: auto", target: "_blank" }, "LINK ↱"] : null,
 			],
 
 			viewer(win.file)
@@ -1005,6 +1104,7 @@ function location_item(item) {
 const Main = () => {
 	return hdom([
 		[".main", activitylog, about, filemanager, WindowManager.render, logo, communal_gallery, toolbox,
+			[".spawn-div"],
 			[".constraint", "Hey! Sorry this website was not built for this screen size, if possible try to view it on a bigger screen."]
 		]
 	])
