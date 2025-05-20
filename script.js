@@ -277,7 +277,22 @@ let monstera = `
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠁⠀⠘⠛⠋⠉⠁⠀⠀⠀⠀⠀⠀⠀
 `
 
-let ascii = ``
+let catto = `
+                   _..
+  /}_{\           /.-'
+ ( a a )-.___...-'/
+ ==._.==         ;
+      \ i _..._ /,
+      {_;/   {_//  fsc
+`
+
+let catmander = `
+		_._     _,-'""'-._
+	 (,-.'._,'(       |\'-/|
+			 '-.-' \ )-'( , o o)
+	 -bf-      '-    \'_'"'-
+`
+
 let teacher = `
           .....
      .'" _  o    "'.
@@ -328,7 +343,79 @@ let printer = `
    ----''|_|______________________==__| ------'
 `
 
-let ascii_options = [teacher, monstera, fishy, bong, printer, ascii]
+let teapot = `
+             ;,'
+     _o_    ;:;'
+ ,-.'---'.__ ;
+((j'=====',-'
+ '-\     /
+    '-=-'        
+`
+
+let puter = `
+       ___________
+      |.---------.|
+      ||         ||
+      ||         ||
+      ||         ||
+      |'---------'|
+       ')__ ____('
+       [=== -- o ]--.
+     __'---------'__ |
+    [::::::::::: :::] )
+     '""'"""""'""""'   
+                       
+`
+
+let matloom = `
+         ___..._
+    _,--'       "'-.
+  ,'.  .            \
+,/:. .     .       .'
+|;..  .      _..--'
+'--:...-,-'""\
+        |:.  '.
+        l;.   l
+        '|:.   |
+         |:.   '.,
+        .l;.    j, ,
+     '. \';:.   //,/
+      .\\)';,|\'/(
+       ' 'itz '(,
+`
+
+let leaf = `
+   |
+ .'|'.
+/.'|\ \
+| /|'.|
+ \ |\/
+  \|/
+   '
+`
+
+let zoomiesover = `
+      |\      _,,,---,,_
+ZZZzz /,'.-'''    -.  ;-;;,_
+     |,4-  ) )-,_. ,\ (  ''-'
+    '---''(_/--'  '-'\_) 
+`
+
+let flower = `
+    _{ ' }_
+   { '.!.' }
+   ',_/Y\_,'
+     {_,_}
+       |
+     (\|  /)
+      \| //
+       |//
+    \\ |/  //
+^^^^^^^^^^^^^^^
+`
+
+let ascii_options = [teacher, monstera, fishy, bong, printer, catto, catmander, teapot, puter, matloom, leaf, zoomiesover, flower]
+let cur = 0
 
 let last_update = new Date()
 window.onmousemove = () => {
@@ -343,7 +430,10 @@ setInterval(() => {
 	if (time_since > 8000) {
 		let el = document.createElement("div")
 		let pre = document.createElement("pre")
-		pre.innerHTML = ascii_options[Math.floor(Math.random() * ascii_options.length)]
+		cur = (cur + 1) % ascii_options.length
+
+		// pre.innerHTML = ascii_options[Math.floor(Math.random() * ascii_options.length)]
+		pre.innerHTML = ascii_options[cur]
 		el.appendChild(pre)
 		el.style.position = "absolute"
 		el.style.left = Math.random() * window.innerWidth + "px"
