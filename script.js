@@ -151,6 +151,7 @@ function init_students(channels) {
 			// make sure there is http:// in begining
 			let link = student.website
 			if (!link.includes("http")) link = "http://" + link
+			if (link.includes("www")) link = link.replace("www", "")
 			console.log("link: ", link)
 			FS.add(File("~/students/" + student.preferred_name + "/website.webloc", { type: "link", content: link }))
 		}
