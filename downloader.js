@@ -7,15 +7,15 @@ let data = []
 let list = []
 
 let api = Arena({ auth })
-api.channel("x-students")
-  .get()
-  .then((channel) => {
-    channel.contents.forEach((c) => {
-      if (c.class == "Channel") { list.push(c.slug) }
-    })
-
-    run()
-  })
+// api.channel("x-students")
+//   .get()
+//   .then((channel) => {
+//     channel.contents.forEach((c) => {
+//       if (c.class == "Channel") { list.push(c.slug) }
+//     })
+//
+//     run()
+//   })
 
 let communalslug = "x-communal-gallery-s1dov7xi7ns"
 api.channel(communalslug)
