@@ -147,7 +147,13 @@ function init_students(channels) {
 
 		FS.add(File("~/students/" + student.preferred_name + "/bio.txt", { type: "text", content: student.bio }))
 		FS.add(File("~/students/" + student.preferred_name + "/work_description.txt", { type: "text", content: student.project_description }))
-		if (student.website !== "") FS.add(File("~/students/" + student.preferred_name + "/website.webloc", { type: "link", content: student.website }))
+		if (student.website !== "") {
+			// make sure there is http:// in begining
+			let link = student.website
+			if (!link.includes("http")) link = "http://" + link
+			console.log("link: ", link)
+			FS.add(File("~/students/" + student.preferred_name + "/website.webloc", { type: "link", content: link }))
+		}
 	})
 
 	location("~/students")
@@ -468,6 +474,48 @@ let logo = () => {
 		[".view-area.centered",
 			["video.logo", { loop: true, autoplay: true, muted: true, src: "./assets/logo.mp4" }],
 		]
+	])
+}
+
+let about_text = `In 2020, all of our lives were changed by a series of unforeseeable events. These events led to our first semester being completely online, being alienated from each other during a formative undergrad that in the past, promised us freedom, new beginnings and a community. Most of us though, did not take this to be the only answer. Suddenly, an instagram page to celebrate each freshmen was made—@ocad2025 (Thanks Aaryan!) A whole discord channel with room for everyone from every major; as long as you were set to graduate in 2025. We had movie nights while kilometres apart, and made playlists to share our music tastes. The internet helped, but our yearning to share a space together, where we could sow a seed of a collective spirit of learning, growing and sharing was undeniable. 
+Well, here we are, four years later. Some of us happy to leave, others not so much… What I think matters most though, has been echoing through the walls of the 6th floor these past few weeks during GradEx. It finally feels like we’re graduating as a studio. Graduating as individuals was never an option for us, and we have to thank ourselves, our professors, and the strangers who helped us get here. Most importantly, the series of unforeseeable events that led up to this very moment. In the end, we were and will always be, students, together.`
+
+let about = () => {
+	let rectangle = mut({
+		x: 4.5,
+		y: 6,
+		w: 18,
+		h: 32
+	})
+
+	let z = sig(2)
+	let style = mem(() => CSS.css({
+		position: "fixed",
+		left: CSS.vw(rectangle.x),
+		top: CSS.vh(rectangle.y),
+		width: CSS.vw(rectangle.w),
+		height: CSS.vh(rectangle.h),
+		"z-index": z(),
+	}))
+
+	let ref = (e) => ref = e
+
+	chowk.mounted(() => {
+		drag(ref, {
+			onstart: (e) => {
+				zindex++
+				z(zindex)
+				LOG.add_log("[EVENT] mouse_down", "Logo")
+			},
+			set_left: (x) => rectangle.x = (x / window.innerWidth) * 100,
+			set_top: (y) => rectangle.y = (y / window.innerHeight) * 100
+		})
+	})
+
+	return hdom([
+		".file-manager", { ref, style: style },
+		[".toolbar", "/about"],
+		[".view-area.centered", ["p", about_text]]
 	])
 }
 

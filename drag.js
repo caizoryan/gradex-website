@@ -67,7 +67,8 @@ export const drag = (elem, options = {}) => {
 		if (!pann) return;
 		// this is so hacky, fuck google chrome
 		if (target != e.target) {
-			e.target.click()
+			let isChromium = !!window.chrome;
+			if (isChromium) e.target.click()
 		}
 
 		e.preventDefault(); e.stopPropagation();
