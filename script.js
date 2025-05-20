@@ -151,7 +151,7 @@ function init_students(channels) {
 			// make sure there is http:// in begining
 			let link = student.website
 			if (!link.includes("http")) link = "http://" + link
-			if (link.includes("www")) link = link.replace("www", "")
+			if (link.includes("www")) link = link.replace("www.", "")
 			console.log("link: ", link)
 			FS.add(File("~/students/" + student.preferred_name + "/website.webloc", { type: "link", content: link }))
 		}
@@ -957,6 +957,7 @@ function windowdom(win) {
 				["button.close", { onclick: () => WindowManager.remove(win.id) }, "x"],
 				["button.maximize", { onclick: () => full(!full()) }, mem(() => full() ? "⇲" : "⇔")],
 				["h4.title", win.title],
+				win.file.type == "link" ? ["a.link", { href: win.file.content, style: "margin-left: auto" }, "LINK ↱"] : null,
 			],
 
 			viewer(win.file)

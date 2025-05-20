@@ -552,7 +552,7 @@ export let newdata = [
     "modified_time": "",
     "preferred_name": "Flora Tam",
     "pronouns": "she/her;",
-    "website": "floratam.ca",
+    "website": "https://floratam.ca",
     "social_media": "Instagram: @1amest",
     "work_email": "floratam02@gmail.com",
     "project_name": "Ceramics (1 - gateway, 2 - laptop, 3 - flasks), Prints/Printmaking (4 - didn't i? 5 - cigar-rat?), Photography/Zine (6 - image collector)",
