@@ -388,7 +388,7 @@ let filemanager = () => {
 		width: CSS.vw(rectangle.w),
 		height: CSS.vh(rectangle.h),
 		"z-index": z(),
-		transition: animation() ? "all 300ms" : "none",
+		transition: animation() ? "all 600ms" : "none",
 	}))
 
 	let ref = (e) => ref = e
@@ -412,7 +412,7 @@ let filemanager = () => {
 			animation(true)
 			rectangle.y = Math.random() * 40
 			rectangle.x = Math.random() * 40
-			setTimeout(() => { animation(false) }, 300)
+			setTimeout(() => { animation(false) }, 700)
 		}, 500)
 	}
 
@@ -478,18 +478,19 @@ let logo = () => {
 	])
 }
 
-let about_text = `In 2020, all of our lives were changed by a series of unforeseeable events. These events led to our first semester being completely online, being alienated from each other during a formative undergrad that in the past, promised us freedom, new beginnings and a community. Most of us though, did not take this to be the only answer. Suddenly, an instagram page to celebrate each freshmen was made—@ocad2025 (Thanks Aaryan!) A whole discord channel with room for everyone from every major; as long as you were set to graduate in 2025. We had movie nights while kilometres apart, and made playlists to share our music tastes. The internet helped, but our yearning to share a space together, where we could sow a seed of a collective spirit of learning, growing and sharing was undeniable. 
+let about_text = `In 2020, all of our lives were changed by a series of unforeseeable events. These events led to our first semester being completely online, being alienated from each other during a formative undergrad that in the past, promised us freedom, new beginnings and a community. Most of us though, did not take this to be the only answer. Suddenly, an instagram page to celebrate each freshmen was made—@ocad2025 A whole discord channel with room for everyone from every major; as long as you were set to graduate in 2025. We had movie nights while kilometres apart, and made playlists to share our music tastes. The internet helped, but our yearning to share a space together, where we could sow a seed of a collective spirit of learning, growing and sharing was undeniable. 
 Well, here we are, four years later. Some of us happy to leave, others not so much… What I think matters most though, has been echoing through the walls of the 6th floor these past few weeks during GradEx. It finally feels like we’re graduating as a studio. Graduating as individuals was never an option for us, and we have to thank ourselves, our professors, and the strangers who helped us get here. Most importantly, the series of unforeseeable events that led up to this very moment. In the end, we were and will always be, students, together.`
 
 let about = () => {
 	let rectangle = mut({
-		x: 4.5,
-		y: 6,
-		w: 18,
-		h: 32
+		x: 68.5,
+		y: 2,
+		w: 23,
+		h: 52
 	})
+	let animation = sig(false)
 
-	let z = sig(2)
+	let z = sig(0)
 	let style = mem(() => CSS.css({
 		position: "fixed",
 		left: CSS.vw(rectangle.x),
@@ -497,10 +498,22 @@ let about = () => {
 		width: CSS.vw(rectangle.w),
 		height: CSS.vh(rectangle.h),
 		"z-index": z(),
+		transition: animation() ? "all 500ms" : "none",
 	}))
 
 	let ref = (e) => ref = e
 
+	const close = () => {
+		rectangle.y = Math.random() > .5 ? -100 : 100
+		rectangle.x = 100
+
+		setTimeout(() => {
+			animation(true)
+			rectangle.y = Math.random() * 40
+			rectangle.x = Math.random() * 40 + 40
+			setTimeout(() => { animation(false) }, 900)
+		}, 500)
+	}
 	chowk.mounted(() => {
 		drag(ref, {
 			onstart: (e) => {
@@ -515,8 +528,10 @@ let about = () => {
 
 	return hdom([
 		".file-manager", { ref, style: style },
-		[".toolbar", "/about"],
-		[".view-area.centered", ["p", about_text]]
+		[".bar",
+			["button.close", { onclick: close }, "x"],
+			["h4.title", "/about"]],
+		[".view-area.scroll.about", about_text.split("\n").map((e) => ["p", e])]
 	])
 }
 
@@ -536,7 +551,7 @@ let communal_gallery = () => {
 		top: CSS.vh(rectangle.y),
 		width: CSS.vw(rectangle.w),
 		height: CSS.vh(rectangle.h),
-		transition: animation() ? "all 300ms" : "none",
+		transition: animation() ? "all 500ms" : "none",
 		"z-index": z(),
 	}))
 
@@ -547,7 +562,7 @@ let communal_gallery = () => {
 			animation(true)
 			rectangle.y = Math.random() * 40
 			rectangle.x = Math.random() * 40
-			setTimeout(() => { animation(false) }, 300)
+			setTimeout(() => { animation(false) }, 600)
 		}, 500)
 	}
 
@@ -988,7 +1003,7 @@ function location_item(item) {
 // -----------------------
 const Main = () => {
 	return hdom([
-		[".main", activitylog, filemanager, WindowManager.render, logo, communal_gallery, toolbox, ,
+		[".main", activitylog, about, filemanager, WindowManager.render, logo, communal_gallery, toolbox,
 			[".constraint", "Hey! Sorry this website was not built for this screen size, if possible try to view it on a bigger screen."]
 		]
 	])
