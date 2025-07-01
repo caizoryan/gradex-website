@@ -423,11 +423,13 @@ window.onmousemove = () => {
 	document.querySelector(".spawn-div").innerHTML = ""
 }
 
+// check if has been more than 30 secs
+let timetime = 30000
+
 setInterval(() => {
-	// check if has been more than 3 secs
 	let now = new Date()
 	let time_since = now.getTime() - last_update.getTime()
-	if (time_since > 8000) {
+	if (time_since > timetime) {
 		let el = document.createElement("div")
 		let pre = document.createElement("pre")
 		cur = (cur + 1) % ascii_options.length
@@ -1001,9 +1003,7 @@ const WindowManager = (function() {
 				file
 			})
 		},
-
 		windows: () => windows,
-
 		isopen: (file) => {
 			let found = windows.find(f => (f.file.type == file.type && f.file.content == file.content))
 			if (found) return true
@@ -1187,7 +1187,6 @@ function location_item(item) {
 }
 
 
-
 // -----------------------
 // COMPONENT: Main
 // -----------------------
@@ -1195,7 +1194,7 @@ const Main = () => {
 	return hdom([
 		[".main", activitylog, about, filemanager, WindowManager.render, logo, communal_gallery, toolbox,
 			[".spawn-div"],
-			[".constraint", "Hey! Sorry this website was not built for this screen size, if possible try to view it on a bigger screen."]
+		 [".constraint", "Hey! Sorry this website was not built for this screen size, if possible try to view it on a bigger screen."]
 		]
 	])
 }
